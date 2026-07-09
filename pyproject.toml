@@ -36,6 +36,12 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# El método `list` sombrea el builtin `list` en las anotaciones de tipo del
+# módulo: mypy requiere `List` de typing (UP006/UP035 piden `list`, pero entonces
+# mypy ve el método, no el builtin). Excepción limitada a este único archivo.
+"ine/services/operaciones.py" = ["UP006", "UP035"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

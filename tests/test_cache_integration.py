@@ -26,8 +26,8 @@ def test_cache_none_default_always_hits_http():
         return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
     with Client(retries=0) as c:
-        c.get_operaciones(raw=True)
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
+        c.operaciones.list(raw=True)
     assert route.call_count == 2
 
 
@@ -39,8 +39,8 @@ def test_cache_hit_on_second_call():
         return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
     with Client(retries=0, cache=cache) as c:
-        first = c.get_operaciones(raw=True)
-        second = c.get_operaciones(raw=True)
+        first = c.operaciones.list(raw=True)
+        second = c.operaciones.list(raw=True)
     assert route.call_count == 1
     assert first == second
 
@@ -58,11 +58,11 @@ def test_errors_are_not_cached():
     )
     with Client(retries=0, cache=cache) as c:
         with pytest.raises(INENotFoundError):
-            c.get_operaciones()
+            c.operaciones.list()
         assert len(cache) == 0  # el error no dejó huella en el cache
 
         # 2ª llamada: la API ya responde 200 -> fetch fresco y se cachea el éxito.
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
     assert route.call_count == 2
     assert len(cache) == 1
 
@@ -79,13 +79,13 @@ def test_different_params_do_not_collide():
     )
 
     with Client(retries=0, cache=cache) as c:
-        c.get_datos_serie("111", nult=1, raw=True)
-        c.get_datos_serie("222", raw=True)
+        c.datos.serie("111", nult=1, raw=True)
+        c.datos.serie("222", raw=True)
         assert route_111.call_count == 1
         assert route_222.call_count == 1
 
         # repetir la primera => hit, sin nueva petición HTTP.
-        c.get_datos_serie("111", nult=1, raw=True)
+        c.datos.serie("111", nult=1, raw=True)
     assert route_111.call_count == 1
     assert route_222.call_count == 1
 
@@ -101,15 +101,15 @@ def test_ttl_expiry_triggers_refetch(monkeypatch):
         return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
     with Client(retries=0, cache=cache) as c:
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
         assert route.call_count == 1
 
         t[0] = 5.0  # dentro del ttl => hit
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
         assert route.call_count == 1
 
         t[0] = 100.0  # expirado => refetch
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
     assert route.call_count == 2
 
 
@@ -123,12 +123,12 @@ async def test_sync_and_async_share_one_cache():
     )
 
     with Client(retries=0, cache=cache) as c:
-        c.get_operaciones(raw=True)
+        c.operaciones.list(raw=True)
     assert route.call_count == 1
 
     # misma (path, params) => hit desde el store compartido.
     async with AsyncClient(retries=0, cache=cache) as ac:
-        await ac.get_operaciones(raw=True)
+        await ac.operaciones.list(raw=True)
     assert route.call_count == 1
 
 

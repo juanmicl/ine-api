@@ -33,7 +33,7 @@ def test_client_get_operaciones_returns_models(mock_ine):
             200, json=[{"Id": 4, "Nombre": "n", "Codigo": "c", "Cod_IOE": "i"}]
         )
     )
-    ops = Client().get_operaciones()
+    ops = Client().operaciones.list()
     assert isinstance(ops[0], Operacion)
     assert ops[0].id == 4
 
@@ -43,5 +43,5 @@ def test_client_get_operaciones_raw(mock_ine):
     mock_ine.get(f"{BASE}/OPERACIONES_DISPONIBLES").mock(
         return_value=httpx.Response(200, json=payload)
     )
-    ops = Client().get_operaciones(raw=True)
+    ops = Client().operaciones.list(raw=True)
     assert ops == payload

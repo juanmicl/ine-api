@@ -47,14 +47,14 @@ uv pip install -e .
 from ine import Client, Lang
 
 with Client(lang=Lang.ES) as client:
-    operaciones = client.get_operaciones()
+    operaciones = client.operaciones.list()
     for op in operaciones[:5]:
         print(op.id, op.codigo, op.nombre)
 
     # Últimas 12 observaciones de la serie IPC53262.
     # Troceamos en local: en vivo, `nult` puede devolver cuerpos vacíos
     # para algunas series del INE.
-    datos = client.get_datos_serie("53262")
+    datos = client.datos.serie("53262")
     for serie in datos:
         for obs in serie.data[-12:]:
             print(obs.fecha.isoformat(), obs.valor)
@@ -77,12 +77,12 @@ from ine import AsyncClient, Lang
 
 async def main() -> None:
     async with AsyncClient(lang=Lang.ES) as client:
-        operaciones = await client.get_operaciones()
+        operaciones = await client.operaciones.list()
         for op in operaciones[:5]:
             print(op.id, op.codigo, op.nombre)
 
         # Últimas 12 observaciones (troceamos en local; ver nota en el quickstart sync).
-        datos = await client.get_datos_serie("53262")
+        datos = await client.datos.serie("53262")
         for serie in datos:
             for obs in serie.data[-12:]:
                 print(obs.fecha.isoformat(), obs.valor)
@@ -141,7 +141,7 @@ from ine.errors import INEConnectionError, INENotFoundError, INEError
 
 with Client() as client:
     try:
-        datos = client.get_datos_serie("0")  # id inválido
+        datos = client.datos.serie("0")  # id inválido
     except INENotFoundError:
         print("La serie no existe.")
     except INEConnectionError:
@@ -188,7 +188,7 @@ Varios métodos aceptan estos parámetros de *query* del INE (todos opcionales):
 - `valores=None` → todos los valores de esa variable (`g3="762:"`).
 
 ```python
-client.get_datos_metadataoperacion(
+client.datos.metadata_operacion(
     "IPC", p="1", nult=12,
     filtros=[("115", ["29", "30"]), ("3", ["84"])],
 )
@@ -200,20 +200,20 @@ client.get_datos_metadataoperacion(
 
 ### Soportados (10)
 
-| Dominio       | Método                          | Recurso                          |
+| Dominio       | Método (namespace)              | Recurso                          |
 | ------------- | ------------------------------- | -------------------------------- |
-| **OPERACIONES** | `get_operaciones()`           | `OPERACIONES_DISPONIBLES`        |
-|               | `get_operacion(id)`             | `OPERACION/{id}`                 |
-| **SERIES**    | `get_serie(id)`                 | `SERIE/{id}`                     |
-|               | `get_series_operacion(op)`      | `SERIES_OPERACION/{op}`          |
-|               | `get_series_tabla(id)`          | `SERIES_TABLA/{id}`              |
-|               | `get_valores_serie(id)`         | `VALORES_SERIE/{id}`             |
-|               | `get_series_metadata_operacion(op, filtros=...)` | `SERIE_METADATAOPERACION/{op}` |
-| **DATOS**     | `get_datos_tabla(id)`           | `DATOS_TABLA/{id}`               |
-|               | `get_datos_serie(id, ...)`      | `DATOS_SERIE/{id}`               |
-|               | `get_datos_metadataoperacion(op, filtros=...)`  | `DATOS_METADATAOPERACION/{op}` |
+| **OPERACIONES** | `client.operaciones.list()`   | `OPERACIONES_DISPONIBLES`        |
+|               | `client.operaciones.get(id)`    | `OPERACION/{id}`                 |
+| **SERIES**    | `client.series.get(id)`         | `SERIE/{id}`                     |
+|               | `client.series.by_operacion(op)`| `SERIES_OPERACION/{op}`          |
+|               | `client.series.by_tabla(id)`    | `SERIES_TABLA/{id}`              |
+|               | `client.series.valores(id)`     | `VALORES_SERIE/{id}`             |
+|               | `client.series.metadata_operacion(op, filtros=...)` | `SERIE_METADATAOPERACION/{op}` |
+| **DATOS**     | `client.datos.tabla(id)`        | `DATOS_TABLA/{id}`               |
+|               | `client.datos.serie(id, ...)`   | `DATOS_SERIE/{id}`               |
+|               | `client.datos.metadata_operacion(op, filtros=...)`  | `DATOS_METADATAOPERACION/{op}` |
 
-`get_tablas(operacion)` también está disponible, pero devuelve `list[dict]`
+`client.tablas.by_operacion(operacion)` también está disponible, pero devuelve `list[dict]`
 crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
 
 ### Pendientes (aún no cubiertos)
@@ -275,8 +275,8 @@ datos *stale* sin que tú lo pidas:
 from ine import Cache, Client
 
 with Client(cache=Cache(ttl=300)) as client:   # cachea 5 min
-    a = client.get_series_operacion("IPC")     # → petición HTTP
-    b = client.get_series_operacion("IPC")     # → cache (0 peticiones)
+    a = client.series.by_operacion("IPC")     # → petición HTTP
+    b = client.series.by_operacion("IPC")     # → cache (0 peticiones)
 ```
 
 - **`Cache(*, ttl=300, maxsize=None)`** — `ttl` en segundos; `maxsize` opcional
@@ -315,7 +315,7 @@ with Client() as client:
 - `lang` por defecto es el del cliente; los bytes son crudos (el charset del INE
   es inconsistente: declara ISO-8859-15 pero lleva BOM UTF-8).
 - Errores: `INENotFoundError` (404), `INEHTTPError`, `INEConnectionError`.
-- **Cuándo usar esto vs `get_datos_tabla`**: para tablas normales, `get_datos_tabla`
+- **Cuándo usar esto vs `client.datos.tabla`**: para tablas normales, `datos.tabla`
   es mejor (filtrable con `nult`/`date`/`tv`, tipado). `download_table` es la salida
   para tablas bloqueadas por volumen o cuando quieres el fichero oficial.
 

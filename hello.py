@@ -3,4 +3,4 @@
 from ine import Client
 
 with Client() as client:
-    print(client.get_operaciones()[:1])
+    print(client.operaciones.list()[:1])

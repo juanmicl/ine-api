@@ -21,7 +21,7 @@ def test_contract_operaciones(mock_ine):
             ],
         )
     )
-    ops = Client().get_operaciones(raw=True)
+    ops = Client().operaciones.list(raw=True)
     assert ops[0]["Id"] == 4
     assert ops[0]["Codigo"] == "ECE"
 
@@ -40,7 +40,7 @@ def test_contract_tablas(mock_ine):
             ],
         )
     )
-    tablas = Client().get_tablas("IPC")
+    tablas = Client().tablas.by_operacion("IPC")
     assert tablas[0]["Id"] == 24077
 
 
@@ -57,6 +57,6 @@ def test_contract_datos_tabla(mock_ine):
             ],
         )
     )
-    datos = Client().get_datos_tabla("24077", raw=True)
+    datos = Client().datos.tabla("24077", raw=True)
     assert datos[0]["COD"] == "IPC53262"
     assert datos[0]["Data"][0]["Anyo"] == 2011

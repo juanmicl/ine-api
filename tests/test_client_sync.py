@@ -19,7 +19,7 @@ def test_get_operaciones():
     )
     from ine.models.operaciones import Operacion
 
-    ops = make_client().get_operaciones()
+    ops = make_client().operaciones.list()
     assert isinstance(ops[0], Operacion)
     assert ops[0].id == 4
 
@@ -29,7 +29,7 @@ def test_get_tablas_passes_operacion_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
         return_value=httpx.Response(200, json=[{"Id": 1}])
     )
-    Client().get_tablas("IPC")
+    Client().tablas.by_operacion("IPC")
     assert route.called
 
 
@@ -39,7 +39,7 @@ def test_get_datos_tabla_passes_params():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
         return_value=httpx.Response(200, json=[{"Data": []}])
     )
-    Client().get_datos_tabla("24077", raw=True)
+    Client().datos.tabla("24077", raw=True)
     assert route.called
 
 
@@ -60,7 +60,7 @@ def test_client_lang_en_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/EN/OPERACIONES_DISPONIBLES").mock(
         return_value=httpx.Response(200, json=[])
     )
-    Client(lang=Lang.EN).get_operaciones()
+    Client(lang=Lang.EN).operaciones.list()
     assert route.called
 
 
@@ -70,4 +70,4 @@ def test_client_propagates_logical_error():
         return_value=httpx.Response(200, json="La operación indicada no existe (X)")
     )
     with pytest.raises(INELogicalError):
-        Client().get_operaciones()
+        Client().operaciones.list()

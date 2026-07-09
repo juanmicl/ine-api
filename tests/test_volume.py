@@ -53,7 +53,7 @@ def test_volume_dict_via_client_get_datos_tabla():
         return_value=httpx.Response(200, json=_STATUS_BODY)
     )
     with pytest.raises(INEVolumeError):
-        Client(retries=0).get_datos_tabla("68535")
+        Client(retries=0).datos.tabla("68535")
 
 
 @respx.mock
@@ -63,7 +63,7 @@ def test_volume_error_caught_by_logical_error():
         return_value=httpx.Response(200, json=_STATUS_BODY)
     )
     with pytest.raises(INELogicalError):
-        Client(retries=0).get_datos_tabla("68535")
+        Client(retries=0).datos.tabla("68535")
 
 
 @respx.mock
