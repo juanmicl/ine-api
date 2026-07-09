@@ -1,8 +1,9 @@
 # ine/_backend.py
 from __future__ import annotations
 
+import contextlib
 import json
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Iterator, Mapping
 from typing import Any, overload
 
 import httpx
@@ -142,6 +143,36 @@ class Backend:
             raise INEParseError(f"Se esperaba un objeto en {path}, se obtuvo {type(data).__name__}")
         return data
 
+    @contextlib.contextmanager
+    def stream(
+        self, url: str, *, params: Mapping[str, Any] | None = None
+    ) -> Iterator[httpx.Response]:
+        """GET en streaming sobre una URL absoluta (servicio de ficheros del INE).
+
+        Comprueba el status **antes** de ceder el body: un 4xx/5xx lanza aquí
+        (:meth:`_raise_for_status`), sin llegar a iterarse la respuesta. Errores
+        de red (apertura o lectura del stream) → :class:`~ine.errors.INEConnectionError`.
+
+        Sin checks H1 / ``_guard_json`` / str: los ficheros no son JSON Tempus.
+
+        Uso::
+
+            with backend.stream(url) as response:
+                for chunk in response.iter_bytes():
+                    ...
+        """
+        try:
+            with self._client.stream("GET", url, params=params) as response:
+                # En streaming, .text exige haber leído el body: sólo leemos el
+                # cuerpo para errores (pequeño); los éxitos se dejan sin leer
+                # para poder iterarlos por chunks (tablas de hasta 70 MB).
+                if not response.is_success:
+                    response.read()
+                self._raise_for_status(response)
+                yield response
+        except httpx.HTTPError as exc:
+            raise INEConnectionError(str(exc)) from exc
+
     def close(self) -> None:
         self._client.close()
 
@@ -243,6 +274,33 @@ class AsyncBackend:
         if not isinstance(data, dict):
             raise INEParseError(f"Se esperaba un objeto en {path}, se obtuvo {type(data).__name__}")
         return data
+
+    @contextlib.asynccontextmanager
+    async def stream(
+        self, url: str, *, params: Mapping[str, Any] | None = None
+    ) -> AsyncIterator[httpx.Response]:
+        """GET en streaming sobre una URL absoluta (servicio de ficheros del INE).
+
+        Espejo asincrono de :meth:`Backend.stream`: status antes de ceder el body,
+        errores de red → :class:`~ine.errors.INEConnectionError`, sin checks JSON.
+
+        Uso::
+
+            async with backend.stream(url) as response:
+                async for chunk in response.aiter_bytes():
+                    ...
+        """
+        try:
+            async with self._client.stream("GET", url, params=params) as response:
+                # En streaming, .text exige haber leído el body: sólo leemos el
+                # cuerpo para errores (pequeño); los éxitos se dejan sin leer
+                # para poder iterarlos por chunks.
+                if not response.is_success:
+                    await response.aread()
+                Backend._raise_for_status(response)
+                yield response
+        except httpx.HTTPError as exc:
+            raise INEConnectionError(str(exc)) from exc
 
     async def aclose(self) -> None:
         await self._client.aclose()

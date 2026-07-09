@@ -3,7 +3,7 @@ import httpx
 import pytest
 import respx
 
-from ine._backend import Backend
+from ine._backend import AsyncBackend, Backend
 from ine._config import Config
 from ine.errors import (
     INEConnectionError,
@@ -153,3 +153,45 @@ def test_backend_follows_redirects_from_config(monkeypatch):
     monkeypatch.setattr(httpx.Client, "__init__", spy)
     Backend(Config(follow_redirects=True))
     assert seen["follow_redirects"] is True
+
+
+# --- stream() (servicio de ficheros) ---------------------------------------
+
+
+@respx.mock
+def test_stream_yields_iterable_body():
+    # 200: cede una response cuyo iter_bytes() produce el body completo.
+    respx.get("https://www.ine.es/f/x").mock(return_value=httpx.Response(200, content=b"abc123"))
+    backend = make_backend()
+    with backend.stream("https://www.ine.es/f/x") as response:
+        body = b"".join(response.iter_bytes())
+    assert body == b"abc123"
+
+
+@respx.mock
+def test_stream_404_raises_before_yielding_body():
+    # 404: _raise_for_status corre ANTES del yield → INENotFoundError, sin body.
+    respx.get("https://www.ine.es/f/x").mock(return_value=httpx.Response(404, text="nope"))
+    backend = make_backend()
+    with pytest.raises(INENotFoundError), backend.stream("https://www.ine.es/f/x") as response:
+        response.iter_bytes()  # no debe llegarse aquí  # pragma: no cover
+
+
+@respx.mock
+def test_stream_translates_connection_error():
+    # Error de red al abrir el stream → INEConnectionError.
+    respx.get("https://www.ine.es/f/x").mock(side_effect=httpx.ConnectError("boom"))
+    backend = make_backend()
+    with pytest.raises(INEConnectionError), backend.stream("https://www.ine.es/f/x"):
+        pass  # pragma: no cover
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_stream_yields_iterable_body():
+    # Espejo async: aiter_bytes() produce el body completo.
+    respx.get("https://www.ine.es/f/x").mock(return_value=httpx.Response(200, content=b"xyz789"))
+    backend = AsyncBackend(Config(retries=0))
+    async with backend.stream("https://www.ine.es/f/x") as response:
+        chunks = [chunk async for chunk in response.aiter_bytes()]
+    assert b"".join(chunks) == b"xyz789"
