@@ -9,6 +9,7 @@ import httpx
 from ine._backend import Backend
 from ine._config import Config
 from ine._config import Lang as Lang
+from ine.models.datos import DatosSerie
 from ine.models.operaciones import Operacion
 
 
@@ -56,7 +57,12 @@ class Client:
             f"/wstempus/js/{self._config.lang.value}/TABLAS_OPERACION/{operacion}"
         )
 
-    def get_datos_tabla(self, tabla_id: str) -> list[dict[str, Any]]:
-        return self._backend.get_list(
+    def get_datos_tabla(
+        self, tabla_id: str, *, raw: bool = False
+    ) -> list[DatosSerie] | list[dict[str, Any]]:
+        data = self._backend.get_list(
             f"/wstempus/js/{self._config.lang.value}/DATOS_TABLA/{tabla_id}"
         )
+        if raw:
+            return data
+        return [DatosSerie.model_validate(d) for d in data]

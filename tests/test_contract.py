@@ -57,6 +57,6 @@ def test_contract_datos_tabla(mock_ine):
             ],
         )
     )
-    datos = Client().get_datos_tabla("24077")
+    datos = Client().get_datos_tabla("24077", raw=True)
     assert datos[0]["COD"] == "IPC53262"
     assert datos[0]["Data"][0]["Anyo"] == 2011

@@ -39,7 +39,7 @@ def test_get_datos_tabla_passes_params():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
         return_value=httpx.Response(200, json=[{"Data": []}])
     )
-    Client().get_datos_tabla("24077")
+    Client().get_datos_tabla("24077", raw=True)
     assert route.called
 
 
