@@ -218,8 +218,7 @@ crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
 ### Pendientes (aún no cubiertos)
 
 `TABLAS` (resto), `VARIABLES`, `VALORES`, `MAESTROS` (escalas, unidades,
-periodos, periodicidades, clasificaciones) y `PUBLICACIONES`. Ver
-[`PLAN.md`](PLAN.md) para el *roadmap*.
+periodos, periodicidades, clasificaciones) y `PUBLICACIONES`.
 
 > **Honesto:** este cliente aún no cubre toda la API Tempus. Los dominios
 > pendientes se irán añadiendo en próximas versiones.
@@ -232,7 +231,7 @@ Todos los parámetros del constructor son *keyword-only* (la firma es estable
 entre versiones):
 
 ```python
-from ine import Client, Lang
+from ine import Cache, Client, Lang
 
 client = Client(
     lang=Lang.ES,                  # idioma de los textos de la respuesta
@@ -240,6 +239,7 @@ client = Client(
     timeout=10.0,                  # timeout por petición, en segundos
     retries=3,                     # reintentos sobre GET idempotente (red + 429 + 5xx)
     headers={"X-Custom": "..."},   # cabeceras extra
+    cache=Cache(ttl=300),          # cache en memoria opt-in (None = sin cache, por defecto)
     httpx_client=None,             # cliente httpx inyectado (DI para tests/config avanzada)
 )
 ```
@@ -260,6 +260,32 @@ with Client() as client:   # abre
     ...
 # cierra automáticamente
 ```
+
+---
+
+## Cache (opt-in)
+
+Para no repetir peticiones idénticas al INE dentro de un mismo proceso (menos
+latencia y carga), activa un **cache en memoria con TTL** pasando un objeto
+`Cache`. Por defecto **está desactivado** (`cache=None`) — nunca te servirá
+datos *stale* sin que tú lo pidas:
+
+```python
+from ine import Cache, Client
+
+with Client(cache=Cache(ttl=300)) as client:   # cachea 5 min
+    a = client.get_series_operacion("IPC")     # → petición HTTP
+    b = client.get_series_operacion("IPC")     # → cache (0 peticiones)
+```
+
+- **`Cache(*, ttl=300, maxsize=None)`** — `ttl` en segundos; `maxsize` opcional
+  (evicción FIFO cuando se alcanza).
+- Solo se cachean **las respuestas válidas**; los errores (`INEError`) se
+  relanzan siempre (nunca se cachean).
+- Es **memoria por proceso** (se pierde al cerrar). La misma instancia `Cache`
+  puede compartirirse entre varios `Client` (sync y async).
+- El modelado pydantic se re-ejecuta sobre el dato cacheado (barato); si
+  necesitas el JSON crudo sin re-validar, usa `raw=True`.
 
 ---
 
@@ -289,5 +315,3 @@ Los *gates* de CI que debe pasar cualquier cambio son:
 ```bash
 uv run ruff check . && uv run mypy ine && uv run pytest
 ```
-
-El *roadmap* de endpoints y diseño está en [`PLAN.md`](PLAN.md).
