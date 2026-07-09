@@ -813,7 +813,7 @@ git commit -m "test: tests de contrato para los 3 endpoints existentes"
 
 # FASE 3 — Modelos pydantic v2 + `raw=True`
 
-> Objetivo: tipar las respuestas con modelos Pythonicos. `extra="ignore"`, `alias_generator=to_snake`, `Fecha`→`datetime`. Mantener `raw=True` como válvula (H5).
+> Objetivo: tipar las respuestas con modelos Pythonicos. Campos en `snake_case`; las claves PascalCase irregulares del INE (`FK_Periodicidad`, `Cod_IOE`, `FK_PubFechaAct`, `Anyo_Periodo_ini`...) se normalizan a snake vía un `model_validator(mode="before")` que aplica `to_snake` a las **claves de entrada** (PascalCase→snake es determinista; el reverso no lo es, por lo que `alias_generator` no sirve aquí). `extra="ignore"`, `Fecha`→`datetime`. Mantener `raw=True` como válvula (H5).
 
 ### Task 3.1: `_BaseModel` y conversión `Fecha` epoch→`datetime`
 
@@ -823,7 +823,9 @@ git commit -m "test: tests de contrato para los 3 endpoints existentes"
 - Test: `tests/test_models_base.py`
 
 **Interfaces:**
-- Produces: `ine.models._base._BaseModel` (pydantic BaseModel con alias snake + extra ignore + populate_by_name) y `ine.models._base.Fecha` (type/anotación que convierte epoch-ms → `datetime`).
+- Produces: `ine.models._base._BaseModel` (pydantic BaseModel que normaliza claves de entrada a snake_case vía `model_validator(before)` + `extra="ignore"` + `populate_by_name=True`) y `ine.models._base.ConFecha` (mixin que convierte epoch-ms → `datetime` para el campo `fecha`).
+
+> **Nota de diseño (verificada empíricamente):** `alias_generator=to_snake` NO funciona para el INE: `alias_generator` mapea *nombre de campo → alias*, y `to_snake("fk_periodicidad") == "fk_periodicidad"`, así que el alias jamás coincide con la clave real `FK_Periodicidad` (la validación falla con "Field required"). La forma correcta y sin pérdidas es **normalizar las claves de entrada** con `to_snake` (PascalCase→snake SÍ es recuperable; `FK_PubFechaAct → fk_pub_fecha_act`, `Cod_IOE → cod_ioe`, `Anyo_Periodo_ini → anyo_periodo_ini`). NUNCA uses `alias_generator` aquí, y NUNCA inventes una función inversa (snake→Pascal) — es con pérdidas para acrónimos/multipalabras.
 
 - [ ] **Step 1: Escribir el test que falla**
 
@@ -845,6 +847,26 @@ def test_alias_to_snake_and_populate_by_name():
     # también acepta el nombre pythonic
     m2 = M(fk_periodicidad=2, t3_operacion="X")
     assert m2.fk_periodicidad == 2
+
+
+def test_hard_ine_keys_acronyms_and_camelcase():
+    # Casos que rompen un alias_generator inverso: acrónimos y CamelCase sin '_'
+    class M(_BaseModel):
+        cod_ioe: str | None = None
+        fk_pub_fecha_act: int | None = None
+        anyo_periodo_ini: str | None = None
+        t3_tipo_dato: str | None = None
+
+    m = M.model_validate({
+        "Cod_IOE": "30138",
+        "FK_PubFechaAct": 12597,
+        "Anyo_Periodo_ini": "1961",
+        "T3_TipoDato": "P",
+    })
+    assert m.cod_ioe == "30138"
+    assert m.fk_pub_fecha_act == 12597
+    assert m.anyo_periodo_ini == "1961"
+    assert m.t3_tipo_dato == "P"
 
 
 def test_extra_ignored():
@@ -873,39 +895,51 @@ Expected: FAIL (`ModuleNotFoundError: ine.models._base`).
 
 - [ ] **Step 3: Implementar `models/_base.py`**
 
-Un `field_validator("*")` global **no** puede saber el tipo destino, así que el helper `Fecha` es un **mixin** `ConFecha` que los modelos con campo `fecha` heredan:
+Un `field_validator("*")` global **no** puede saber el tipo destino, así que el helper `Fecha` es un **mixin** `ConFecha` que los modelos con campo `fecha` heredan. La normalización de claves se hace con un `model_validator(mode="before")` (ver nota de diseño arriba):
 
 ```python
 # ine/models/_base.py
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from pydantic.alias_generators import to_snake
 
 
 class _BaseModel(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=to_snake,
-        populate_by_name=True,
-        extra="ignore",
-    )
+    """Base para modelos del INE.
+
+    El INE envía claves en PascalCase irregular (``FK_Periodicidad``,
+    ``Cod_IOE``, ``FK_PubFechaAct``, ``Anyo_Periodo_ini``...). Normalizamos las
+    CLAVES de entrada con ``to_snake`` (PascalCase→snake es determinista), y
+    declaramos los campos en snake_case. ``extra='ignore'`` descarta campos
+    desconocidos (el INE añade campos sin avisar; el spec tiene bugs).
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_keys(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return {to_snake(k): v for k, v in data.items()}
+        return data
 
 
 class ConFecha(_BaseModel):
-    """Mixin para modelos con un campo `fecha` (alias `Fecha`) en epoch-ms.
+    """Mixin para modelos con un campo ``fecha`` que el INE envía como epoch-ms.
 
-    Hereda y declara `fecha: datetime`. El validator convierte epoch-ms
-    (int/float) a datetime UTC antes de la coerción de pydantic.
+    ``check_fields=False`` es necesario porque el mixin no declara ``fecha``;
+    lo hacen las subclases concretas.
     """
 
-    @field_validator("fecha", mode="before")
+    @field_validator("fecha", mode="before", check_fields=False)
     @classmethod
-    def _epoch_ms(cls, v: Any):
+    def _epoch_ms(cls, v: Any) -> Any:
         if isinstance(v, (int, float)) and not isinstance(v, bool):
-            return datetime.fromtimestamp(v / 1000, tz=timezone.utc)
+            return datetime.fromtimestamp(v / 1000, tz=UTC)
         return v
 ```
 
