@@ -1,17 +1,33 @@
 # tests/test_models_base.py
 from datetime import UTC, datetime
 
-from ine.models._base import ConFecha, _BaseModel, to_ine_alias
+from ine.models._base import ConFecha, _BaseModel
 
 
-def test_to_ine_alias():
-    assert to_ine_alias("fk_periodicidad") == "FK_Periodicidad"
-    assert to_ine_alias("t3_operacion") == "T3_Operacion"
-    assert to_ine_alias("fecha") == "Fecha"
-    assert to_ine_alias("nombre") == "Nombre"
+def test_hard_ine_keys_acronyms_and_camelcase():
+    from ine.models._base import _BaseModel
+
+    class M(_BaseModel):
+        cod_ioe: str | None = None
+        fk_pub_fecha_act: int | None = None
+        anyo_periodo_ini: str | None = None
+        t3_tipo_dato: str | None = None
+
+    m = M.model_validate(
+        {
+            "Cod_IOE": "30138",
+            "FK_PubFechaAct": 12597,
+            "Anyo_Periodo_ini": "1961",
+            "T3_TipoDato": "P",
+        }
+    )
+    assert m.cod_ioe == "30138"
+    assert m.fk_pub_fecha_act == 12597
+    assert m.anyo_periodo_ini == "1961"
+    assert m.t3_tipo_dato == "P"
 
 
-def test_alias_to_snake_and_populate_by_name():
+def test_simple_keys_and_populate_by_name():
     class M(_BaseModel):
         fk_periodicidad: int
         t3_operacion: str
