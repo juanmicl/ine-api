@@ -34,8 +34,8 @@ def test_get_tablas_passes_operacion_in_path():
 
 
 @respx.mock
-def test_get_datos_tabla_passes_params():
-    # compat: firma actual sin params extra, pero el path debe contener el id
+def test_get_datos_tabla_hits_path_with_id():
+    # El id va en el path; el reenvío de query params se cubre en test_namespaces_params.py
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
         return_value=httpx.Response(200, json=[{"Data": []}])
     )
