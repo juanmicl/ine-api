@@ -51,7 +51,9 @@ with Client(lang=Lang.ES) as client:
     for op in operaciones[:5]:
         print(op.id, op.codigo, op.nombre)
 
-    # Últimas observaciones de la serie IPC53262
+    # Últimas 12 observaciones de la serie IPC53262.
+    # Troceamos en local: en vivo, `nult` puede devolver cuerpos vacíos
+    # para algunas series del INE.
     datos = client.get_datos_serie("53262")
     for serie in datos:
         for obs in serie.data[-12:]:
@@ -79,6 +81,7 @@ async def main() -> None:
         for op in operaciones[:5]:
             print(op.id, op.codigo, op.nombre)
 
+        # Últimas 12 observaciones (troceamos en local; ver nota en el quickstart sync).
         datos = await client.get_datos_serie("53262")
         for serie in datos:
             for obs in serie.data[-12:]:
