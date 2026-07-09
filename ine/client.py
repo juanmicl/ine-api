@@ -581,7 +581,7 @@ class Client:
         """
         url = build_file_url(lang or self._config.lang.value, fmt, table_id)
         if path is not None:
-            with self._backend.stream(url) as response, open(path, "wb") as f:
+            with open(path, "wb") as f, self._backend.stream(url) as response:
                 for chunk in response.iter_bytes():
                     f.write(chunk)
             return Path(path)

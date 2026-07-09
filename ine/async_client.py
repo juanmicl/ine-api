@@ -615,8 +615,8 @@ class AsyncClient:
         """
         url = build_file_url(lang or self._config.lang.value, fmt, table_id)
         if path is not None:
-            async with self._backend.stream(url) as response:
-                with open(path, "wb") as f:
+            with open(path, "wb") as f:
+                async with self._backend.stream(url) as response:
                     async for chunk in response.aiter_bytes():
                         f.write(chunk)
             return Path(path)

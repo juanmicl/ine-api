@@ -132,6 +132,7 @@ Todas las excepciones heredan de `INEError`, así que basta un
 | `INEHTTPError`         | Respuesta HTTP 4xx/5xx. Expone `.status`, `.url` y `.body`.            |
 | `INENotFoundError`     | Recurso no encontrado (HTTP 404). Subclase de `INEHTTPError`.          |
 | `INELogicalError`      | El INE respondió `200` con un mensaje de error lógico (rareza nº 1).   |
+| `INEVolumeError`       | Subclase de `INELogicalError`: la tabla es demasiado grande ("restricciones de volumen"). Usa `download_table`. |
 | `INEParseError`        | La respuesta no es JSON o no tiene la forma esperada.                  |
 
 ```python
@@ -286,6 +287,37 @@ with Client(cache=Cache(ttl=300)) as client:   # cachea 5 min
   puede compartirirse entre varios `Client` (sync y async).
 - El modelado pydantic se re-ejecuta sobre el dato cacheado (barato); si
   necesitas el JSON crudo sin re-validar, usa `raw=True`.
+
+---
+
+## Descarga de ficheros (CSV / PC-Axis / XLSX)
+
+Para tablas **muy grandes** que la API JSON rechaza ("restricciones de volumen",
+p. ej. el Padrón, id `68535`) o cuando necesitas el formato oficial, descarga el
+fichero directamente. Es un **servicio distinto** (`ine.es/jaxiT3/files`, no la
+API Tempus JSON) y la descarga es por **streaming**:
+
+```python
+from ine import Client, Format
+
+with Client() as client:
+    # Streama por chunks a fichero (seguro para decenas de MB) → devuelve Path
+    path = client.download_table("68535", fmt=Format.CSV_BDSC, path="padron.csv")
+
+    # O a bytes en memoria (cuidado con tablas muy grandes)
+    data = client.download_table("68535", fmt=Format.PX)   # → bytes
+```
+
+- **`Format`**: `CSV_BDSC` (CSV con cabecera, separador `;`), `CSV_BD`, `PX`
+  (PC-Axis), `XLSX`.
+- `path` dado → streama al fichero y devuelve `pathlib.Path`; `path=None` →
+  `bytes` (se carga entero en memoria).
+- `lang` por defecto es el del cliente; los bytes son crudos (el charset del INE
+  es inconsistente: declara ISO-8859-15 pero lleva BOM UTF-8).
+- Errores: `INENotFoundError` (404), `INEHTTPError`, `INEConnectionError`.
+- **Cuándo usar esto vs `get_datos_tabla`**: para tablas normales, `get_datos_tabla`
+  es mejor (filtrable con `nult`/`date`/`tv`, tipado). `download_table` es la salida
+  para tablas bloqueadas por volumen o cuando quieres el fichero oficial.
 
 ---
 
