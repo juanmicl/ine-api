@@ -1,6 +1,6 @@
 [project]
 name = "ine-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "Cliente Python para la API Tempus del INE (Instituto Nacional de Estadística de España)"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -15,6 +15,12 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
 ]
+
+[project.urls]
+Homepage = "https://github.com/juanmicl/ine-api"
+Repository = "https://github.com/juanmicl/ine-api"
+Issues = "https://github.com/juanmicl/ine-api/issues"
+Changelog = "https://github.com/juanmicl/ine-api/releases"
 
 [build-system]
 requires = ["hatchling"]
