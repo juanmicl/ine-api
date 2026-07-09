@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -10,6 +11,7 @@ from ine._backend import AsyncBackend
 from ine._cache import Cache
 from ine._config import Config
 from ine._config import Lang as Lang
+from ine._files import Format, build_file_url
 from ine._filters import Grupo, compilar_filtros
 from ine._urls import (
     build_params,
@@ -571,3 +573,52 @@ class AsyncClient:
         if raw:
             return data
         return [Serie.model_validate(d) for d in data]
+
+    # --- ficheros (CSV / PC-Axis / XLSX) ---
+    async def download_table(
+        self,
+        table_id: str,
+        fmt: Format = Format.CSV_BDSC,
+        *,
+        path: str | Path | None = None,
+        lang: str | None = None,
+    ) -> Path | bytes:
+        """Descarga el fichero oficial de una tabla (CSV / PC-Axis / XLSX).
+
+        Servicio de ficheros del INE — host distinto a la API Tempus JSON:
+        ``https://www.ine.es/jaxiT3/files/t/{lang}/{fmt}/{table_id}.{ext}?nocab=1``.
+        Útil para tablas muy grandes que la API JSON rechaza por "restricciones
+        de volumen" (p. ej. el Padrón, id 68535) o cuando se necesita el formato
+        oficial. La descarga es por *streaming* (no se carga entera en memoria
+        salvo que se pida explícitamente).
+
+        Args:
+            table_id: Identificador Tempus3 de la tabla (``Id``).
+            fmt: Formato del fichero (:class:`Format`). Por defecto CSV (BDSC).
+            path: Si se da (``str`` o :class:`~pathlib.Path`), streama por chunks
+                al fichero y devuelve :class:`~pathlib.Path` — seguro para tablas
+                de decenas de MB. Si es ``None`` (default), devuelve ``bytes`` en
+                memoria (cuidado con tablas muy grandes).
+            lang: Idioma del fichero; si es ``None`` usa el ``lang`` del cliente.
+
+        Returns:
+            :class:`~pathlib.Path` si se pasó ``path``; ``bytes`` en caso
+            contrario. (No existe ``raw`` aquí: nunca se devuelven modelos.)
+
+        Raises:
+            INENotFoundError: La tabla no existe (HTTP 404).
+            INEHTTPError: Otro error HTTP 4xx/5xx del servicio de ficheros.
+            INEConnectionError: Error de red durante la descarga.
+
+        Note:
+            Método coroutine: invocar con ``await``.
+        """
+        url = build_file_url(lang or self._config.lang.value, fmt, table_id)
+        if path is not None:
+            async with self._backend.stream(url) as response:
+                with open(path, "wb") as f:
+                    async for chunk in response.aiter_bytes():
+                        f.write(chunk)
+            return Path(path)
+        async with self._backend.stream(url) as response:
+            return await response.aread()
