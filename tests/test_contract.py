@@ -2,7 +2,6 @@
 import httpx
 
 from ine.client import Client
-from ine.models.operaciones import Operacion
 
 BASE = "https://servicios.ine.es/wstempus/js/ES"
 
@@ -22,10 +21,9 @@ def test_contract_operaciones(mock_ine):
             ],
         )
     )
-    ops = Client().get_operaciones()
-    assert isinstance(ops[0], Operacion)
-    assert ops[0].id == 4
-    assert ops[0].codigo == "ECE"
+    ops = Client().get_operaciones(raw=True)
+    assert ops[0]["Id"] == 4
+    assert ops[0]["Codigo"] == "ECE"
 
 
 def test_contract_tablas(mock_ine):
