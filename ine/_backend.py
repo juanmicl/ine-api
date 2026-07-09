@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, overload
 
 import httpx
+from httpx_retries import Retry, RetryTransport
 
 from ine._config import Config
 from ine.errors import (
@@ -15,6 +16,54 @@ from ine.errors import (
     INEParseError,
 )
 
+# Política de reintento: sólo GET idempotente, sobre errores de red + 429 + 5xx,
+# respetando Retry-After. backoff exponencial (factor 0.5) con jitter completo
+# (default de la librería). El rango 500-599 cubre todo el bloque 5xx.
+_RETRY_STATUS_FORCELIST: tuple[int, ...] = (429, *range(500, 600))
+
+
+def _build_retry(total: int) -> Retry:
+    """Construye la política de reintentos a partir de ``config.retries``.
+
+    Sólo se reintenta GET (único verbo que usa este Backend), sobre errores de
+    red (defaults de la librería: Timeout/Network/RemoteProtocol) y los códigos
+    429 + 5xx. Se respeta la cabecera Retry-After.
+    """
+    return Retry(
+        total=total,
+        allowed_methods=("GET",),
+        status_forcelist=_RETRY_STATUS_FORCELIST,
+        backoff_factor=0.5,
+        respect_retry_after_header=True,
+    )
+
+
+@overload
+def _maybe_retry_transport(
+    config: Config, transport: httpx.BaseTransport
+) -> httpx.BaseTransport: ...
+
+
+@overload
+def _maybe_retry_transport(
+    config: Config, transport: httpx.AsyncBaseTransport
+) -> httpx.AsyncBaseTransport: ...
+
+
+def _maybe_retry_transport(
+    config: Config,
+    transport: httpx.BaseTransport | httpx.AsyncBaseTransport,
+) -> httpx.BaseTransport | httpx.AsyncBaseTransport:
+    """Envuelve ``transport`` con un :class:`RetryTransport` si ``config.retries>0``.
+
+    Usado sólo cuando el Backend construye su propio cliente; un cliente
+    inyectado (DI) no se toca. ``RetryTransport`` implementa a la vez
+    ``BaseTransport`` y ``AsyncBaseTransport``, de ahí los overloads.
+    """
+    if config.retries > 0:
+        return RetryTransport(transport=transport, retry=_build_retry(config.retries))
+    return transport
+
 
 class Backend:
     """Costura I/O sincrona. Único punto que sabe de httpx."""
@@ -22,10 +71,12 @@ class Backend:
     def __init__(self, config: Config, httpx_client: httpx.Client | None = None) -> None:
         self._config = config
         if httpx_client is None:
+            transport = _maybe_retry_transport(config, httpx.HTTPTransport())
             httpx_client = httpx.Client(
                 base_url=config.base_url,
                 timeout=config.timeout,
                 follow_redirects=config.follow_redirects,
+                transport=transport,
                 headers={"User-Agent": config.user_agent, **dict(config.headers)},
             )
         self._client = httpx_client
@@ -93,10 +144,12 @@ class AsyncBackend:
     def __init__(self, config: Config, httpx_client: httpx.AsyncClient | None = None) -> None:
         self._config = config
         if httpx_client is None:
+            transport = _maybe_retry_transport(config, httpx.AsyncHTTPTransport())
             httpx_client = httpx.AsyncClient(
                 base_url=config.base_url,
                 timeout=config.timeout,
                 follow_redirects=config.follow_redirects,
+                transport=transport,
                 headers={"User-Agent": config.user_agent, **dict(config.headers)},
             )
         self._client = httpx_client

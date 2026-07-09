@@ -15,7 +15,10 @@ from ine.errors import (
 
 
 def make_backend():
-    return Backend(Config())
+    # retries=0: estos tests verifican la traducción de errores (H2/H3), no los
+    # reintentos (que se cubren en tests/test_retries.py). Sin esto, un 500 o un
+    # ConnectError dispararía 3 reintentos con sleeps reales de backoff.
+    return Backend(Config(retries=0))
 
 
 @respx.mock

@@ -31,6 +31,7 @@ class AsyncClient:
         timeout: float = 10.0,
         follow_redirects: bool = True,
         headers: Mapping[str, str] | None = None,
+        retries: int = 3,
         httpx_client: httpx.AsyncClient | None = None,
     ) -> None:
         self._config = Config(
@@ -39,6 +40,7 @@ class AsyncClient:
             timeout=timeout,
             follow_redirects=follow_redirects,
             headers=headers or {},
+            retries=retries,
         )
         self._backend = AsyncBackend(self._config, httpx_client=httpx_client)
 
