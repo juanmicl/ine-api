@@ -1,4 +1,9 @@
-"""Cliente Python para la API Tempus del INE."""
+"""Cliente Python para la API Tempus del INE (Instituto Nacional de Estadística).
+
+Punto de entrada: :class:`~ine.client.Client` (sincrono) y
+:class:`~ine.async_client.AsyncClient` (asincrono). Excepciones en
+:mod:`ine.errors`.
+"""
 
 from ine import errors as errors
 from ine._config import Lang as Lang

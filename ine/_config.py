@@ -12,6 +12,12 @@ except importlib.metadata.PackageNotFoundError:
 
 
 class Lang(StrEnum):
+    """Idiomas admitidos por la API Tempus del INE.
+
+    Determina el segmento ``/js/{lang}/`` de las URLs y, por tanto, el idioma
+    de los textos (nombres de operaciones, series, valores...) de la respuesta.
+    """
+
     ES = "ES"
     EN = "EN"
     CA = "CA"
@@ -24,6 +30,13 @@ _USER_AGENT = f"ine-api/{__version__}"
 
 @dataclass(frozen=True)
 class Config:
+    """Configuración inmutable del cliente (transporte, timeouts, reintentos).
+
+    La construye internamente :class:`~ine.client.Client` /
+    :class:`~ine.async_client.AsyncClient` a partir de sus parámetros
+    *keyword-only*; los usuarios rara vez la instancian directamente.
+    """
+
     lang: Lang = Lang.ES
     base_url: str = "https://servicios.ine.es"
     timeout: float = 10.0
