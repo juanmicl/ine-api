@@ -7,7 +7,8 @@ from typing import Any
 import httpx
 
 from ine._backend import Backend
-from ine._config import Config, Lang
+from ine._config import Config
+from ine._config import Lang as Lang
 
 
 class Client:
@@ -42,12 +43,16 @@ class Client:
 
     # --- endpoints (compatibles con la API actual; aún devuelven list) ---
     def get_operaciones(self) -> list[dict[str, Any]]:
-        return self._backend.get(f"/wstempus/js/{self._config.lang.value}/OPERACIONES_DISPONIBLES")
+        return self._backend.get_list(
+            f"/wstempus/js/{self._config.lang.value}/OPERACIONES_DISPONIBLES"
+        )
 
     def get_tablas(self, operacion: str) -> list[dict[str, Any]]:
-        return self._backend.get(
+        return self._backend.get_list(
             f"/wstempus/js/{self._config.lang.value}/TABLAS_OPERACION/{operacion}"
         )
 
     def get_datos_tabla(self, tabla_id: str) -> list[dict[str, Any]]:
-        return self._backend.get(f"/wstempus/js/{self._config.lang.value}/DATOS_TABLA/{tabla_id}")
+        return self._backend.get_list(
+            f"/wstempus/js/{self._config.lang.value}/DATOS_TABLA/{tabla_id}"
+        )

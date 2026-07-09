@@ -30,7 +30,10 @@ class Backend:
             )
         self._client = httpx_client
 
-    def get(self, path: str, params: Mapping[str, Any] | None = None) -> list[Any] | dict[Any, Any]:
+    def _request(
+        self, path: str, params: Mapping[str, Any] | None = None
+    ) -> list[Any] | dict[str, Any]:
+        """I/O compartido: raise_for_status, guarda JSON, traduce errores (H1/H2/H3)."""
         try:
             response = self._client.get(path, params=params)
         except httpx.HTTPError as exc:
@@ -38,9 +41,23 @@ class Backend:
         self._raise_for_status(response)
         self._guard_json(response)
         # La API devuelve list/dict en éxito, o str (mensaje de error lógico, H1).
-        data: list[Any] | dict[Any, Any] | str = response.json()
+        data: list[Any] | dict[str, Any] | str = response.json()
         if isinstance(data, str):
             raise INELogicalError(data)
+        return data
+
+    def get_list(self, path: str, params: Mapping[str, Any] | None = None) -> list[Any]:
+        """Para endpoints que devuelven un array JSON."""
+        data = self._request(path, params)
+        if not isinstance(data, list):
+            raise INEParseError(f"Se esperaba una lista en {path}, se obtuvo {type(data).__name__}")
+        return data
+
+    def get_one(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """Para endpoints que devuelven un único objeto JSON."""
+        data = self._request(path, params)
+        if not isinstance(data, dict):
+            raise INEParseError(f"Se esperaba un objeto en {path}, se obtuvo {type(data).__name__}")
         return data
 
     def close(self) -> None:
