@@ -7,6 +7,7 @@ from typing import Any
 import httpx
 
 from ine._backend import AsyncBackend
+from ine._cache import Cache
 from ine._config import Config
 from ine._config import Lang as Lang
 from ine._filters import Grupo, compilar_filtros
@@ -62,6 +63,7 @@ class AsyncClient:
         headers: Mapping[str, str] | None = None,
         retries: int = 3,
         httpx_client: httpx.AsyncClient | None = None,
+        cache: Cache | None = None,
     ) -> None:
         """Construye el cliente.
 
@@ -77,6 +79,10 @@ class AsyncClient:
                 respeta sin modificar.
             httpx_client: Cliente HTTP asincrono inyectado (DI). Si se pasa, se
                 reutiliza tal cual (sin reintentos ni cabeceras propias).
+            cache: Cache en memoria opt-in (:class:`~ine._cache.Cache`). Si se
+                pasa, los éxitos se cachean por ``(path, params)`` durante su
+                ``ttl``; los errores no se cachean. ``None`` (default) = sin
+                cache (comportamiento actual).
 
         Note:
             Todos los parámetros son *keyword-only*.
@@ -89,7 +95,7 @@ class AsyncClient:
             headers=headers or {},
             retries=retries,
         )
-        self._backend = AsyncBackend(self._config, httpx_client=httpx_client)
+        self._backend = AsyncBackend(self._config, httpx_client=httpx_client, cache=cache)
 
     # --- context manager ---
     async def __aenter__(self) -> AsyncClient:

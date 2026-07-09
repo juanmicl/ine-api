@@ -8,6 +8,7 @@ from typing import Any, overload
 import httpx
 from httpx_retries import Retry, RetryTransport
 
+from ine._cache import Cache
 from ine._config import Config
 from ine.errors import (
     INEConnectionError,
@@ -69,8 +70,14 @@ def _maybe_retry_transport(
 class Backend:
     """Costura I/O sincrona. Único punto que sabe de httpx."""
 
-    def __init__(self, config: Config, httpx_client: httpx.Client | None = None) -> None:
+    def __init__(
+        self,
+        config: Config,
+        httpx_client: httpx.Client | None = None,
+        cache: Cache | None = None,
+    ) -> None:
         self._config = config
+        self._cache = cache
         if httpx_client is None:
             transport = _maybe_retry_transport(config, httpx.HTTPTransport())
             httpx_client = httpx.Client(
@@ -107,16 +114,30 @@ class Backend:
             raise INELogicalError(data)
         return data
 
+    def _cached_request(
+        self, path: str, params: Mapping[str, Any] | None = None
+    ) -> list[Any] | dict[str, Any]:
+        """Cachea éxitos por ``(path, params)``; los ``INEError`` se propagan sin cachear."""
+        if self._cache is None:
+            return self._request(path, params)
+        key = (path, json.dumps(params or {}, sort_keys=True, default=str))
+        hit: list[Any] | dict[str, Any] | None = self._cache.get(key)
+        if hit is not None:
+            return hit
+        data = self._request(path, params)
+        self._cache.set(key, data)
+        return data
+
     def get_list(self, path: str, params: Mapping[str, Any] | None = None) -> list[Any]:
         """Para endpoints que devuelven un array JSON."""
-        data = self._request(path, params)
+        data = self._cached_request(path, params)
         if not isinstance(data, list):
             raise INEParseError(f"Se esperaba una lista en {path}, se obtuvo {type(data).__name__}")
         return data
 
     def get_one(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
         """Para endpoints que devuelven un único objeto JSON."""
-        data = self._request(path, params)
+        data = self._cached_request(path, params)
         if not isinstance(data, dict):
             raise INEParseError(f"Se esperaba un objeto en {path}, se obtuvo {type(data).__name__}")
         return data
@@ -151,8 +172,14 @@ class AsyncBackend:
     y ``aclose``); los *helpers* estáticos se reutilizan desde :class:`Backend`.
     """
 
-    def __init__(self, config: Config, httpx_client: httpx.AsyncClient | None = None) -> None:
+    def __init__(
+        self,
+        config: Config,
+        httpx_client: httpx.AsyncClient | None = None,
+        cache: Cache | None = None,
+    ) -> None:
         self._config = config
+        self._cache = cache
         if httpx_client is None:
             transport = _maybe_retry_transport(config, httpx.AsyncHTTPTransport())
             httpx_client = httpx.AsyncClient(
@@ -189,16 +216,30 @@ class AsyncBackend:
             raise INELogicalError(data)
         return data
 
+    async def _cached_request(
+        self, path: str, params: Mapping[str, Any] | None = None
+    ) -> list[Any] | dict[str, Any]:
+        """Cachea éxitos por ``(path, params)``; los ``INEError`` se propagan sin cachear."""
+        if self._cache is None:
+            return await self._request(path, params)
+        key = (path, json.dumps(params or {}, sort_keys=True, default=str))
+        hit: list[Any] | dict[str, Any] | None = self._cache.get(key)
+        if hit is not None:
+            return hit
+        data = await self._request(path, params)
+        self._cache.set(key, data)
+        return data
+
     async def get_list(self, path: str, params: Mapping[str, Any] | None = None) -> list[Any]:
         """Para endpoints que devuelven un array JSON."""
-        data = await self._request(path, params)
+        data = await self._cached_request(path, params)
         if not isinstance(data, list):
             raise INEParseError(f"Se esperaba una lista en {path}, se obtuvo {type(data).__name__}")
         return data
 
     async def get_one(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
         """Para endpoints que devuelven un único objeto JSON."""
-        data = await self._request(path, params)
+        data = await self._cached_request(path, params)
         if not isinstance(data, dict):
             raise INEParseError(f"Se esperaba un objeto en {path}, se obtuvo {type(data).__name__}")
         return data
