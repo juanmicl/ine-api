@@ -326,9 +326,9 @@ with Client() as client:
 - El **código** de este cliente está bajo la licencia **MIT** (ver
   [`LICENSE`](LICENSE)).
 - Los **datos** del INE distribuidos a través de su API están bajo la licencia
-  **Creative Commons Reconocimiento 4.0 (CC BY 4.0)**. Al usarlos debes
+  **Creative Commons Attribution 4.0 (CC BY 4.0)**. Al usarlos debes
   **atribuirlos al INE** (Instituto Nacional de Estadística). Consulta los
-  [términos de reutilización del INE](https://www.ine.es/aviso_legal.htm).
+  [términos de reutilización del INE](https://www.ine.es/dyngs/AYU/index.htm?cid=125).
 
 > Esta librería no está afiliada al INE. Es un cliente de la comunidad.
 
