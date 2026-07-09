@@ -43,3 +43,13 @@ class INEParseError(INEError):
 
 class INELogicalError(INEError):
     """La API devolvió 200 pero con un mensaje de error lógico (H1)."""
+
+
+class INEVolumeError(INELogicalError):
+    """El INE rechazó la petición por 'restricciones de volumen' (tabla demasiado grande).
+
+    Típicamente devuelto como ``200`` con un objeto ``{"status": "..."}`` (p. ej.
+    tablas enormes que la API JSON no puede serializar). Usa
+    :meth:`~ine.client.Client.download_table` para obtener los datos de tablas
+    muy grandes.
+    """

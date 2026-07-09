@@ -17,6 +17,7 @@ from ine.errors import (
     INELogicalError,
     INENotFoundError,
     INEParseError,
+    INEVolumeError,
 )
 
 # Política de reintento: sólo GET idempotente, sobre errores de red + 429 + 5xx,
@@ -113,6 +114,15 @@ class Backend:
             raise INEParseError(f"Respuesta JSON inválida o vacía: {exc}") from exc
         if isinstance(data, str):
             raise INELogicalError(data)
+        # 200 con {"status": "..."}: el INE lo usa para "restricciones de volumen"
+        # (tablas enormes). Se intercepta aquí para no devolver un dict que
+        # get_list confundiría con un INEParseError; un dict legítimo sin "status"
+        # (p. ej. get_one) pasa de largo sin afectarse.
+        if isinstance(data, dict) and "status" in data:
+            status = str(data["status"])
+            raise INEVolumeError(
+                f"{status} — usa Client.download_table(...) para tablas muy grandes"
+            )
         return data
 
     def _cached_request(
@@ -245,6 +255,15 @@ class AsyncBackend:
             raise INEParseError(f"Respuesta JSON inválida o vacía: {exc}") from exc
         if isinstance(data, str):
             raise INELogicalError(data)
+        # 200 con {"status": "..."}: el INE lo usa para "restricciones de volumen"
+        # (tablas enormes). Se intercepta aquí para no devolver un dict que
+        # get_list confundiría con un INEParseError; un dict legítimo sin "status"
+        # (p. ej. get_one) pasa de largo sin afectarse.
+        if isinstance(data, dict) and "status" in data:
+            status = str(data["status"])
+            raise INEVolumeError(
+                f"{status} — usa Client.download_table(...) para tablas muy grandes"
+            )
         return data
 
     async def _cached_request(
