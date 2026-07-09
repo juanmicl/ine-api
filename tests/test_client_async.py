@@ -1,0 +1,103 @@
+# tests/test_client_async.py
+import httpx
+import pytest
+import respx
+
+from ine._config import Lang
+from ine.async_client import AsyncClient
+from ine.errors import INELogicalError
+from ine.models.datos import DatosSerie
+from ine.models.operaciones import Operacion
+
+
+def make_client() -> AsyncClient:
+    return AsyncClient(lang=Lang.ES)
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_operaciones():
+    respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
+        return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
+    )
+    ops = await make_client().get_operaciones()
+    assert isinstance(ops[0], Operacion)
+    assert ops[0].id == 4
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_operaciones_raw():
+    respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
+        return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
+    )
+    ops = await make_client().get_operaciones(raw=True)
+    assert ops == [{"Id": 4, "Nombre": "Op"}]
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_tablas_passes_operacion_in_path():
+    route = respx.get("https://servicios.ine.es/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
+        return_value=httpx.Response(200, json=[{"Id": 1}])
+    )
+    await AsyncClient().get_tablas("IPC")
+    assert route.called
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_datos_tabla_returns_models():
+    respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
+        return_value=httpx.Response(
+            200,
+            json=[{"Cod": "S24077", "Nombre": "Serie", "Data": []}],
+        )
+    )
+    series = await AsyncClient().get_datos_tabla("24077")
+    assert isinstance(series[0], DatosSerie)
+    assert series[0].cod == "S24077"
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_datos_tabla_raw():
+    respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
+        return_value=httpx.Response(200, json=[{"Data": []}])
+    )
+    data = await AsyncClient().get_datos_tabla("24077", raw=True)
+    assert data == [{"Data": []}]
+
+
+@pytest.mark.anyio
+async def test_async_client_is_context_manager():
+    async with AsyncClient() as c:
+        assert isinstance(c, AsyncClient)
+
+
+@pytest.mark.anyio
+async def test_async_client_uses_injected_httpx_client():
+    injected = httpx.AsyncClient(base_url="https://servicios.ine.es")
+    c = AsyncClient(httpx_client=injected)
+    assert c._backend._client is injected
+    await injected.aclose()
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_client_lang_en_in_path():
+    route = respx.get("https://servicios.ine.es/wstempus/js/EN/OPERACIONES_DISPONIBLES").mock(
+        return_value=httpx.Response(200, json=[])
+    )
+    await AsyncClient(lang=Lang.EN).get_operaciones()
+    assert route.called
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_client_propagates_logical_error():
+    respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
+        return_value=httpx.Response(200, json="La operación indicada no existe (X)")
+    )
+    with pytest.raises(INELogicalError):
+        await AsyncClient().get_operaciones()
