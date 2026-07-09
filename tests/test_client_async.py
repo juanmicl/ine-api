@@ -10,17 +10,14 @@ from ine.models.datos import DatosSerie
 from ine.models.operaciones import Operacion
 
 
-def make_client() -> AsyncClient:
-    return AsyncClient(lang=Lang.ES)
-
-
 @respx.mock
 @pytest.mark.anyio
 async def test_async_get_operaciones():
     respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
         return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
-    ops = await make_client().get_operaciones()
+    async with AsyncClient() as c:
+        ops = await c.get_operaciones()
     assert isinstance(ops[0], Operacion)
     assert ops[0].id == 4
 
@@ -31,7 +28,8 @@ async def test_async_get_operaciones_raw():
     respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
         return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
-    ops = await make_client().get_operaciones(raw=True)
+    async with AsyncClient() as c:
+        ops = await c.get_operaciones(raw=True)
     assert ops == [{"Id": 4, "Nombre": "Op"}]
 
 
@@ -41,7 +39,8 @@ async def test_async_get_tablas_passes_operacion_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
         return_value=httpx.Response(200, json=[{"Id": 1}])
     )
-    await AsyncClient().get_tablas("IPC")
+    async with AsyncClient() as c:
+        await c.get_tablas("IPC")
     assert route.called
 
 
@@ -54,7 +53,8 @@ async def test_async_get_datos_tabla_returns_models():
             json=[{"Cod": "S24077", "Nombre": "Serie", "Data": []}],
         )
     )
-    series = await AsyncClient().get_datos_tabla("24077")
+    async with AsyncClient() as c:
+        series = await c.get_datos_tabla("24077")
     assert isinstance(series[0], DatosSerie)
     assert series[0].cod == "S24077"
 
@@ -65,7 +65,8 @@ async def test_async_get_datos_tabla_raw():
     respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/24077").mock(
         return_value=httpx.Response(200, json=[{"Data": []}])
     )
-    data = await AsyncClient().get_datos_tabla("24077", raw=True)
+    async with AsyncClient() as c:
+        data = await c.get_datos_tabla("24077", raw=True)
     assert data == [{"Data": []}]
 
 
@@ -89,7 +90,8 @@ async def test_async_client_lang_en_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/EN/OPERACIONES_DISPONIBLES").mock(
         return_value=httpx.Response(200, json=[])
     )
-    await AsyncClient(lang=Lang.EN).get_operaciones()
+    async with AsyncClient(lang=Lang.EN) as c:
+        await c.get_operaciones()
     assert route.called
 
 
@@ -100,7 +102,8 @@ async def test_async_client_propagates_logical_error():
         return_value=httpx.Response(200, json="La operación indicada no existe (X)")
     )
     with pytest.raises(INELogicalError):
-        await AsyncClient().get_operaciones()
+        async with AsyncClient() as c:
+            await c.get_operaciones()
 
 
 @respx.mock
@@ -109,9 +112,8 @@ async def test_async_get_datos_metadataoperacion_compiles_filtros_to_g():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_METADATAOPERACION/IPC").mock(
         return_value=httpx.Response(200, json=[{"Cod": "S1", "Nombre": "S", "Data": []}])
     )
-    await AsyncClient().get_datos_metadataoperacion(
-        "IPC", filtros=[("115", ["29", "30"]), ("3", ["84"])]
-    )
+    async with AsyncClient() as c:
+        await c.get_datos_metadataoperacion("IPC", filtros=[("115", ["29", "30"]), ("3", ["84"])])
     params = route.calls.last.request.url.params
     # OR dentro del grupo -> g1 repetido; AND entre grupos -> g2
     assert params.get_list("g1") == ["115:29", "115:30"]

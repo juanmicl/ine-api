@@ -278,7 +278,8 @@ async def test_async_get_serie_maps_cod_and_operacion():
     respx.get(f"{BASE}/wstempus/js/ES/SERIE/CP0222024").mock(
         return_value=httpx.Response(200, json=[SERIE_JSON])
     )
-    series = await AsyncClient().get_serie("CP0222024")
+    async with AsyncClient() as c:
+        series = await c.get_serie("CP0222024")
     assert isinstance(series[0], Serie)
     assert series[0].cod == "CP0222024"
     assert series[0].operacion is not None
@@ -291,7 +292,8 @@ async def test_async_get_series_tabla_forwards_tv_repeated():
     route = respx.get(f"{BASE}/wstempus/js/ES/SERIES_TABLA/24077").mock(
         return_value=httpx.Response(200, json=[SERIE_JSON])
     )
-    await AsyncClient().get_series_tabla("24077", tv=["1:2", "3:84"])
+    async with AsyncClient() as c:
+        await c.get_series_tabla("24077", tv=["1:2", "3:84"])
     assert route.calls.last.request.url.params.get_list("tv") == ["1:2", "3:84"]
 
 
@@ -301,9 +303,8 @@ async def test_async_get_series_metadata_operacion_compiles_filtros():
     route = respx.get(f"{BASE}/wstempus/js/ES/SERIE_METADATAOPERACION/IPC").mock(
         return_value=httpx.Response(200, json=[SERIE_JSON])
     )
-    await AsyncClient().get_series_metadata_operacion(
-        "IPC", filtros=[("115", ["29", "30"]), ("3", ["84"])]
-    )
+    async with AsyncClient() as c:
+        await c.get_series_metadata_operacion("IPC", filtros=[("115", ["29", "30"]), ("3", ["84"])])
     params = route.calls.last.request.url.params
     assert params.get_list("g1") == ["115:29", "115:30"]
     assert params["g2"] == "3:84"
@@ -315,5 +316,6 @@ async def test_async_get_valores_serie_raw():
     respx.get(f"{BASE}/wstempus/js/ES/VALORES_SERIE/CP0222024").mock(
         return_value=httpx.Response(200, json=[VALOR_JSON])
     )
-    data = await AsyncClient().get_valores_serie("CP0222024", raw=True)
+    async with AsyncClient() as c:
+        data = await c.get_valores_serie("CP0222024", raw=True)
     assert data == [VALOR_JSON]

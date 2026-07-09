@@ -88,6 +88,10 @@ class Backend:
         try:
             response = self._client.get(path, params=params)
         except httpx.HTTPError as exc:
+            # Seguro: el Backend usa su propio `_raise_for_status` (nunca
+            # httpx `response.raise_for_status()`), así que un HTTPStatusError
+            # 4xx/5xx nunca escapa de `_client.get(...)`: todo lo que llega
+            # aquí es genuinamente un error de conexión/transporte.
             raise INEConnectionError(str(exc)) from exc
         self._raise_for_status(response)
         self._guard_json(response)
@@ -161,6 +165,10 @@ class AsyncBackend:
         try:
             response = await self._client.get(path, params=params)
         except httpx.HTTPError as exc:
+            # Seguro: el Backend usa su propio `_raise_for_status` (nunca
+            # httpx `response.raise_for_status()`), así que un HTTPStatusError
+            # 4xx/5xx nunca escapa de `_client.get(...)`: todo lo que llega
+            # aquí es genuinamente un error de conexión/transporte.
             raise INEConnectionError(str(exc)) from exc
         Backend._raise_for_status(response)
         Backend._guard_json(response)
