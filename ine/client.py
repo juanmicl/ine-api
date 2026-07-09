@@ -15,9 +15,15 @@ from ine._urls import (
     datos_metadataoperacion_path,
     datos_serie_path,
     operacion_path,
+    serie_metadataoperacion_path,
+    serie_path,
+    series_operacion_path,
+    series_tabla_path,
+    valores_serie_path,
 )
 from ine.models.datos import DatosSerie
 from ine.models.operaciones import Operacion
+from ine.models.series import Serie, Valor
 
 
 class Client:
@@ -127,3 +133,86 @@ class Client:
         if raw:
             return data
         return [DatosSerie.model_validate(d) for d in data]
+
+    # --- SERIES (Fase 5) ---
+    def get_serie(
+        self,
+        id_serie: str,
+        *,
+        det: str | None = None,
+        tip: str | None = None,
+        raw: bool = False,
+    ) -> list[Serie] | list[dict[str, Any]]:
+        data = self._backend.get_list(
+            serie_path(self._config.lang.value, id_serie),
+            build_params(det=det, tip=tip),
+        )
+        if raw:
+            return data
+        return [Serie.model_validate(d) for d in data]
+
+    def get_series_operacion(
+        self,
+        op: str,
+        *,
+        det: str | None = None,
+        tip: str | None = None,
+        page: int | None = None,
+        raw: bool = False,
+    ) -> list[Serie] | list[dict[str, Any]]:
+        data = self._backend.get_list(
+            series_operacion_path(self._config.lang.value, op),
+            build_params(det=det, tip=tip, page=page),
+        )
+        if raw:
+            return data
+        return [Serie.model_validate(d) for d in data]
+
+    def get_series_tabla(
+        self,
+        id_tabla: str,
+        *,
+        det: str | None = None,
+        tip: str | None = None,
+        tv: list[str] | None = None,
+        raw: bool = False,
+    ) -> list[Serie] | list[dict[str, Any]]:
+        data = self._backend.get_list(
+            series_tabla_path(self._config.lang.value, id_tabla),
+            build_params(det=det, tip=tip, tv=tv),
+        )
+        if raw:
+            return data
+        return [Serie.model_validate(d) for d in data]
+
+    def get_valores_serie(
+        self, id_serie: str, *, det: str | None = None, raw: bool = False
+    ) -> list[Valor] | list[dict[str, Any]]:
+        data = self._backend.get_list(
+            valores_serie_path(self._config.lang.value, id_serie),
+            build_params(det=det),
+        )
+        if raw:
+            return data
+        return [Valor.model_validate(d) for d in data]
+
+    def get_series_metadata_operacion(
+        self,
+        op: str,
+        *,
+        p: str | None = None,
+        det: str | None = None,
+        tip: str | None = None,
+        filtros: list[Grupo] | None = None,
+        raw: bool = False,
+    ) -> list[Serie] | list[dict[str, Any]]:
+        params = build_params(p=p, det=det, tip=tip)
+        if filtros is not None:
+            params |= compilar_filtros(filtros)
+        data = self._backend.get_list(
+            serie_metadataoperacion_path(self._config.lang.value, op),
+            params,
+        )
+        if raw:
+            return data
+        return [Serie.model_validate(d) for d in data]

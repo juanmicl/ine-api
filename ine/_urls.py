@@ -31,5 +31,21 @@ def series_operacion_path(lang: str, op: str) -> str:
     return f"/wstempus/js/{lang}/SERIES_OPERACION/{op}"
 
 
+def serie_path(lang: str, serie_id: str) -> str:
+    return f"/wstempus/js/{lang}/SERIE/{serie_id}"
+
+
+def series_tabla_path(lang: str, tabla_id: str) -> str:
+    return f"/wstempus/js/{lang}/SERIES_TABLA/{tabla_id}"
+
+
+def valores_serie_path(lang: str, serie_id: str) -> str:
+    return f"/wstempus/js/{lang}/VALORES_SERIE/{serie_id}"
+
+
+def serie_metadataoperacion_path(lang: str, op: str) -> str:
+    return f"/wstempus/js/{lang}/SERIE_METADATAOPERACION/{op}"
+
+
 def build_params(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}
