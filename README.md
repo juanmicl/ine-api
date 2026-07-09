@@ -10,34 +10,35 @@ Cliente Python tipado (sync + async) para la API Tempus del INE (Instituto Nacio
 
 ## Estado
 
-**v0.1.0 — en desarrollo.** La API pública aún puede cambiar. Este cliente
+**En desarrollo (SemVer 0.x).** La API pública aún puede cambiar. Este cliente
 **cubre parcialmente** la API Tempus del INE (10 de los endpoints; ver
-[Cobertura](#cobertura-de-endpoints)). No está publicado en PyPI todavía.
+[Cobertura](#cobertura-de-endpoints)). Publicado en
+[PyPI](https://pypi.org/project/ine-api/).
 
 ---
 
 ## Instalación
 
-Requiere **Python ≥ 3.12** y se gestiona con [`uv`](https://docs.astral.sh/uv/).
+Requiere **Python ≥ 3.12**.
+
+```bash
+pip install ine-api
+```
+
+o con [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+uv add ine-api
+```
 
 **Desarrollo / contribución:**
 
 ```bash
-git clone <este-repo> ine-api
+git clone https://github.com/juanmicl/ine-api.git
 cd ine-api
 uv sync          # instala runtime + dev en un .venv aislado
 uv run pytest    # corre los tests
 ```
-
-**Instalación local (editable):**
-
-```bash
-pip install -e .
-# o, con uv:
-uv pip install -e .
-```
-
-> Aún no está en PyPI. Cuando se publique, será simplemente `pip install ine-api`.
 
 ---
 
