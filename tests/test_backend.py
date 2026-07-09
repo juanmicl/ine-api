@@ -70,6 +70,31 @@ def test_get_list_raises_parse_error_on_html_200():
 
 
 @respx.mock
+def test_get_list_raises_parse_error_on_empty_body():
+    # El INE puede devolver 200 con content-type application/json pero cuerpo
+    # vacío: response.json() lanza JSONDecodeError, que debe traducirse a
+    # INEParseError (no filtrar la excepción cruda de la librería stdlib).
+    respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/0").mock(
+        return_value=httpx.Response(200, content="", headers={"content-type": "application/json"})
+    )
+    with pytest.raises(INEParseError):
+        make_backend().get_list("/wstempus/js/ES/DATOS_SERIE/0")
+
+
+@respx.mock
+def test_get_list_raises_parse_error_on_malformed_json():
+    # 200 con content-type application/json pero JSON inválido: mismo contrato,
+    # debe traducirse a INEParseError.
+    respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/0").mock(
+        return_value=httpx.Response(
+            200, content="{not json", headers={"content-type": "application/json"}
+        )
+    )
+    with pytest.raises(INEParseError):
+        make_backend().get_list("/wstempus/js/ES/DATOS_SERIE/0")
+
+
+@respx.mock
 def test_get_list_translates_connection_error():
     respx.get("https://servicios.ine.es/wstempus/js/ES/X").mock(
         side_effect=httpx.ConnectError("boom")

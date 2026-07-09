@@ -1,6 +1,7 @@
 # ine/_backend.py
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from typing import Any, overload
 
@@ -96,7 +97,12 @@ class Backend:
         self._raise_for_status(response)
         self._guard_json(response)
         # La API devuelve list/dict en éxito, o str (mensaje de error lógico, H1).
-        data: list[Any] | dict[str, Any] | str = response.json()
+        # Un 200 con cuerpo vacío/malformado escapa como JSONDecodeError: lo
+        # traducimos a INEParseError para no romper el contrato (sólo ine.errors.*).
+        try:
+            data: list[Any] | dict[str, Any] | str = response.json()
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise INEParseError(f"Respuesta JSON inválida o vacía: {exc}") from exc
         if isinstance(data, str):
             raise INELogicalError(data)
         return data
@@ -173,7 +179,12 @@ class AsyncBackend:
         Backend._raise_for_status(response)
         Backend._guard_json(response)
         # La API devuelve list/dict en éxito, o str (mensaje de error lógico, H1).
-        data: list[Any] | dict[str, Any] | str = response.json()
+        # Un 200 con cuerpo vacío/malformado escapa como JSONDecodeError: lo
+        # traducimos a INEParseError para no romper el contrato (sólo ine.errors.*).
+        try:
+            data: list[Any] | dict[str, Any] | str = response.json()
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise INEParseError(f"Respuesta JSON inválida o vacía: {exc}") from exc
         if isinstance(data, str):
             raise INELogicalError(data)
         return data
