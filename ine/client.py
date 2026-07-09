@@ -9,6 +9,7 @@ import httpx
 from ine._backend import Backend
 from ine._config import Config
 from ine._config import Lang as Lang
+from ine.models.operaciones import Operacion
 
 
 class Client:
@@ -41,11 +42,14 @@ class Client:
     def close(self) -> None:
         self._backend.close()
 
-    # --- endpoints (compatibles con la API actual; aún devuelven list) ---
-    def get_operaciones(self) -> list[dict[str, Any]]:
-        return self._backend.get_list(
+    # --- endpoints (compatibles con la API actual) ---
+    def get_operaciones(self, *, raw: bool = False) -> list[Operacion] | list[dict[str, Any]]:
+        data = self._backend.get_list(
             f"/wstempus/js/{self._config.lang.value}/OPERACIONES_DISPONIBLES"
         )
+        if raw:
+            return data
+        return [Operacion.model_validate(d) for d in data]
 
     def get_tablas(self, operacion: str) -> list[dict[str, Any]]:
         return self._backend.get_list(

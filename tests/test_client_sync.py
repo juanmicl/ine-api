@@ -15,9 +15,13 @@ def make_client():
 @respx.mock
 def test_get_operaciones():
     respx.get("https://servicios.ine.es/wstempus/js/ES/OPERACIONES_DISPONIBLES").mock(
-        return_value=httpx.Response(200, json=[{"Id": 4}])
+        return_value=httpx.Response(200, json=[{"Id": 4, "Nombre": "Op"}])
     )
-    assert make_client().get_operaciones() == [{"Id": 4}]
+    from ine.models.operaciones import Operacion
+
+    ops = make_client().get_operaciones()
+    assert isinstance(ops[0], Operacion)
+    assert ops[0].id == 4
 
 
 @respx.mock
