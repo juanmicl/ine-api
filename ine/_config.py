@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import importlib.metadata
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+
+try:
+    __version__ = importlib.metadata.version("ine-api")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "0.0.0"
 
 
 class Lang(StrEnum):
@@ -13,7 +19,7 @@ class Lang(StrEnum):
     EU = "EU"
 
 
-_USER_AGENT = "ine-api/0.1.0"
+_USER_AGENT = f"ine-api/{__version__}"
 
 
 @dataclass(frozen=True)
