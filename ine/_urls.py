@@ -23,6 +23,10 @@ def datos_serie_path(lang: str, serie_id: str) -> str:
     return f"/wstempus/js/{lang}/DATOS_SERIE/{serie_id}"
 
 
+def datos_metadataoperacion_path(lang: str, op: str) -> str:
+    return f"/wstempus/js/{lang}/DATOS_METADATAOPERACION/{op}"
+
+
 def series_operacion_path(lang: str, op: str) -> str:
     return f"/wstempus/js/{lang}/SERIES_OPERACION/{op}"
 

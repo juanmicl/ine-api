@@ -101,3 +101,18 @@ async def test_async_client_propagates_logical_error():
     )
     with pytest.raises(INELogicalError):
         await AsyncClient().get_operaciones()
+
+
+@respx.mock
+@pytest.mark.anyio
+async def test_async_get_datos_metadataoperacion_compiles_filtros_to_g():
+    route = respx.get("https://servicios.ine.es/wstempus/js/ES/DATOS_METADATAOPERACION/IPC").mock(
+        return_value=httpx.Response(200, json=[{"Cod": "S1", "Nombre": "S", "Data": []}])
+    )
+    await AsyncClient().get_datos_metadataoperacion(
+        "IPC", filtros=[("115", ["29", "30"]), ("3", ["84"])]
+    )
+    params = route.calls.last.request.url.params
+    # OR dentro del grupo -> g1 repetido; AND entre grupos -> g2
+    assert params.get_list("g1") == ["115:29", "115:30"]
+    assert params["g2"] == "3:84"
