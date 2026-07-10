@@ -199,7 +199,7 @@ client.datos.metadata_operacion(
 
 ## Cobertura de endpoints
 
-### Soportados (26)
+### Soportados (32 — catálogo completo)
 
 | Dominio       | Método (namespace)              | Recurso                          |
 | ------------- | ------------------------------- | -------------------------------- |
@@ -229,19 +229,18 @@ client.datos.metadata_operacion(
 | **VARIABLES** | `client.variables.variables()`  | `VARIABLES`                     |
 |               | `client.variables.variables_operacion(op)` | `VARIABLES_OPERACION/{op}` |
 |               | `client.variables.variable(id)` | `VARIABLE/{id}` (no documentado) |
+| **VALORES**   | `client.valores.by_variable(id_var)` | `VALORES_VARIABLE/{id_var}` |
+|               | `client.valores.by_variable_operacion(id_var, op)` | `VALORES_VARIABLEOPERACION/{id_var}/{op}` |
+|               | `client.valores.hijos(id_var, id_valor)` | `VALORES_HIJOS/{id_var}/{id_valor}` |
+| **TABLAS**    | `client.tablas.by_operacion(op)` | `TABLAS_OPERACION/{op}`         |
+|               | `client.tablas.grupos(id)`       | `GRUPOS_TABLA/{id}`             |
+|               | `client.tablas.valores_grupo(id, id_grupo)` | `VALORES_GRUPOSTABLA/{id}/{id_grupo}` |
 
-`client.tablas.by_operacion(operacion)` también está disponible, pero devuelve `list[dict]`
-crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
+> Incluye **8 endpoints no documentados** en el OpenAPI oficial (7 en `client.maestros`
+> + `client.variables.variable`), descubiertos empíricamente y verificados en vivo.
 
-> `client.maestros` incluye **7 endpoints no documentados** en el OpenAPI oficial
-> (escalas, unidades, periodos y periodicidad individuales), descubiertos empíricamente.
-
-### Pendientes (aún no cubiertos)
-
-`TABLAS` (resto: grupos/valores de tabla + modelo `Tabla`) y `VALORES`.
-
-> **Honesto:** este cliente aún no cubre toda la API Tempus. Los dominios
-> pendientes se irán añadiendo en próximas versiones.
+**Cobertura completa** de la API Tempus del INE: los 32 endpoints del catálogo
+(24 del spec oficial + 8 no documentados).
 
 ---
 
