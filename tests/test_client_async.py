@@ -37,7 +37,7 @@ async def test_async_get_operaciones_raw():
 @pytest.mark.anyio
 async def test_async_get_tablas_passes_operacion_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
-        return_value=httpx.Response(200, json=[{"Id": 1}])
+        return_value=httpx.Response(200, json=[{"Id": 1, "Nombre": "T"}])
     )
     async with AsyncClient() as c:
         await c.tablas.by_operacion("IPC")

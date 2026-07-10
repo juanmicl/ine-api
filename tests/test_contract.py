@@ -41,7 +41,7 @@ def test_contract_tablas(mock_ine):
         )
     )
     tablas = Client().tablas.by_operacion("IPC")
-    assert tablas[0]["Id"] == 24077
+    assert tablas[0].id == 24077
 
 
 def test_contract_datos_tabla(mock_ine):

@@ -120,5 +120,31 @@ def variable_path(lang: str, variable_id: int) -> str:
     return f"/wstempus/js/{lang}/VARIABLE/{variable_id}"
 
 
+# --- VALORES ---
+
+
+def valores_variable_path(lang: str, id_variable: int) -> str:
+    return f"/wstempus/js/{lang}/VALORES_VARIABLE/{id_variable}"
+
+
+def valores_variable_operacion_path(lang: str, id_variable: int, op: str) -> str:
+    return f"/wstempus/js/{lang}/VALORES_VARIABLEOPERACION/{id_variable}/{op}"
+
+
+def valores_hijos_path(lang: str, id_variable: int, id_valor: int) -> str:
+    return f"/wstempus/js/{lang}/VALORES_HIJOS/{id_variable}/{id_valor}"
+
+
+# --- TABLAS (extensión: grupos + valores_grupo) ---
+
+
+def grupos_tabla_path(lang: str, id_tabla: str) -> str:
+    return f"/wstempus/js/{lang}/GRUPOS_TABLA/{id_tabla}"
+
+
+def valores_grupostabla_path(lang: str, id_tabla: str, id_grupo: int) -> str:
+    return f"/wstempus/js/{lang}/VALORES_GRUPOSTABLA/{id_tabla}/{id_grupo}"
+
+
 def build_params(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}

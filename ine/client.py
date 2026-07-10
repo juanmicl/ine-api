@@ -18,6 +18,7 @@ from ine.services import (
     PublicacionesService,
     SeriesService,
     TablasService,
+    ValoresService,
     VariablesService,
 )
 
@@ -102,6 +103,7 @@ class Client:
         self.maestros = MaestrosService(self._backend, self._config)
         self.publicaciones = PublicacionesService(self._backend, self._config)
         self.variables = VariablesService(self._backend, self._config)
+        self.valores = ValoresService(self._backend, self._config)
 
     # --- context manager ---
     def __enter__(self) -> Client:

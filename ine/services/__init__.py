@@ -17,6 +17,7 @@ from ine.services.operaciones import AsyncOperacionesService, OperacionesService
 from ine.services.publicaciones import AsyncPublicacionesService, PublicacionesService
 from ine.services.series import AsyncSeriesService, SeriesService
 from ine.services.tablas import AsyncTablasService, TablasService
+from ine.services.valores import AsyncValoresService, ValoresService
 from ine.services.variables import AsyncVariablesService, VariablesService
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "AsyncPublicacionesService",
     "AsyncSeriesService",
     "AsyncTablasService",
+    "AsyncValoresService",
     "AsyncVariablesService",
     "DatosService",
     "MaestrosService",
@@ -33,5 +35,6 @@ __all__ = [
     "PublicacionesService",
     "SeriesService",
     "TablasService",
+    "ValoresService",
     "VariablesService",
 ]

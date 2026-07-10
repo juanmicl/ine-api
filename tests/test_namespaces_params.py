@@ -30,7 +30,7 @@ def test_operaciones_list_forwards_det_geo_page():
 @respx.mock
 def test_tablas_by_operacion_forwards_det_geo_tip():
     route = respx.get(f"{BASE}/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
-        return_value=httpx.Response(200, json=[{"Id": 1}])
+        return_value=httpx.Response(200, json=[{"Id": 1, "Nombre": "T"}])
     )
     Client().tablas.by_operacion("IPC", det="1", geo="0", tip="M")
     params = route.calls.last.request.url.params

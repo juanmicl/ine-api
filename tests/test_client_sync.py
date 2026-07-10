@@ -27,7 +27,7 @@ def test_get_operaciones():
 @respx.mock
 def test_get_tablas_passes_operacion_in_path():
     route = respx.get("https://servicios.ine.es/wstempus/js/ES/TABLAS_OPERACION/IPC").mock(
-        return_value=httpx.Response(200, json=[{"Id": 1}])
+        return_value=httpx.Response(200, json=[{"Id": 1, "Nombre": "T"}])
     )
     Client().tablas.by_operacion("IPC")
     assert route.called
