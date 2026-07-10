@@ -199,7 +199,7 @@ client.datos.metadata_operacion(
 
 ## Cobertura de endpoints
 
-### Soportados (10)
+### Soportados (20)
 
 | Dominio       | Método (namespace)              | Recurso                          |
 | ------------- | ------------------------------- | -------------------------------- |
@@ -213,14 +213,27 @@ client.datos.metadata_operacion(
 | **DATOS**     | `client.datos.tabla(id)`        | `DATOS_TABLA/{id}`               |
 |               | `client.datos.serie(id, ...)`   | `DATOS_SERIE/{id}`               |
 |               | `client.datos.metadata_operacion(op, filtros=...)`  | `DATOS_METADATAOPERACION/{op}` |
+| **MAESTROS**  | `client.maestros.escalas()`     | `ESCALAS`                        |
+|               | `client.maestros.escala(id)`    | `ESCALA/{id}`                    |
+|               | `client.maestros.unidades()`    | `UNIDADES`                       |
+|               | `client.maestros.unidad(id)`    | `UNIDAD/{id}`                    |
+|               | `client.maestros.unidades_operacion(op)` | `UNIDADES_OPERACION/{op}` |
+|               | `client.maestros.periodo(id)`   | `PERIODO/{id}`                   |
+|               | `client.maestros.periodicidades()` | `PERIODICIDADES`              |
+|               | `client.maestros.periodicidad(id)` | `PERIODICIDAD/{id}`           |
+|               | `client.maestros.clasificaciones()` | `CLASIFICACIONES`            |
+|               | `client.maestros.clasificaciones_operacion(op)` | `CLASIFICACIONES_OPERACION/{op}` |
 
 `client.tablas.by_operacion(operacion)` también está disponible, pero devuelve `list[dict]`
 crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
 
+> `client.maestros` incluye **7 endpoints no documentados** en el OpenAPI oficial
+> (escalas, unidades, periodos y periodicidad individuales), descubiertos empíricamente.
+
 ### Pendientes (aún no cubiertos)
 
-`TABLAS` (resto), `VARIABLES`, `VALORES`, `MAESTROS` (escalas, unidades,
-periodos, periodicidades, clasificaciones) y `PUBLICACIONES`.
+`TABLAS` (resto: grupos/valores de tabla + modelo `Tabla`), `VARIABLES`, `VALORES`
+y `PUBLICACIONES`.
 
 > **Honesto:** este cliente aún no cubre toda la API Tempus. Los dominios
 > pendientes se irán añadiendo en próximas versiones.
