@@ -199,7 +199,7 @@ client.datos.metadata_operacion(
 
 ## Cobertura de endpoints
 
-### Soportados (20)
+### Soportados (26)
 
 | Dominio       | Método (namespace)              | Recurso                          |
 | ------------- | ------------------------------- | -------------------------------- |
@@ -223,6 +223,12 @@ client.datos.metadata_operacion(
 |               | `client.maestros.periodicidad(id)` | `PERIODICIDAD/{id}`           |
 |               | `client.maestros.clasificaciones()` | `CLASIFICACIONES`            |
 |               | `client.maestros.clasificaciones_operacion(op)` | `CLASIFICACIONES_OPERACION/{op}` |
+| **PUBLICACIONES** | `client.publicaciones.publicaciones()` | `PUBLICACIONES`            |
+|               | `client.publicaciones.publicaciones_operacion(op)` | `PUBLICACIONES_OPERACION/{op}` |
+|               | `client.publicaciones.publicacion_fecha(id)` | `PUBLICACIONFECHA_PUBLICACION/{id}` |
+| **VARIABLES** | `client.variables.variables()`  | `VARIABLES`                     |
+|               | `client.variables.variables_operacion(op)` | `VARIABLES_OPERACION/{op}` |
+|               | `client.variables.variable(id)` | `VARIABLE/{id}` (no documentado) |
 
 `client.tablas.by_operacion(operacion)` también está disponible, pero devuelve `list[dict]`
 crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
@@ -232,8 +238,7 @@ crudo (el INE no documenta un esquema estable para `TABLAS_OPERACION`).
 
 ### Pendientes (aún no cubiertos)
 
-`TABLAS` (resto: grupos/valores de tabla + modelo `Tabla`), `VARIABLES`, `VALORES`
-y `PUBLICACIONES`.
+`TABLAS` (resto: grupos/valores de tabla + modelo `Tabla`) y `VALORES`.
 
 > **Honesto:** este cliente aún no cubre toda la API Tempus. Los dominios
 > pendientes se irán añadiendo en próximas versiones.
