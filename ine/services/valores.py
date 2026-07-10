@@ -27,7 +27,7 @@ class ValoresService(BaseService):
         id_variable: int,
         *,
         det: str | None = None,
-        clasif: str | None = None,
+        clasif: int | None = None,
         raw: bool = False,
     ) -> list[Valor] | list[dict[str, Any]]:
         """Lista los valores de una variable.
@@ -91,7 +91,7 @@ class AsyncValoresService(AsyncBaseService):
         id_variable: int,
         *,
         det: str | None = None,
-        clasif: str | None = None,
+        clasif: int | None = None,
         raw: bool = False,
     ) -> list[Valor] | list[dict[str, Any]]:
         """Lista los valores de una variable (coroutine).

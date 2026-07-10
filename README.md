@@ -10,10 +10,10 @@ Cliente Python tipado (sync + async) para la API Tempus del INE (Instituto Nacio
 
 ## Estado
 
-**En desarrollo (SemVer 0.x).** La API pública aún puede cambiar. Este cliente
-**cubre parcialmente** la API Tempus del INE (10 de los endpoints; ver
+**v1.0 — API pública estable (SemVer).** Cliente Python tipado (sync + async) para
+la API Tempus del INE, con **cobertura completa** del catálogo (32 endpoints; ver
 [Cobertura](#cobertura-de-endpoints)). Publicado en
-[PyPI](https://pypi.org/project/ine-api/).
+[PyPI](https://pypi.org/project/ine-api/); versión instalada: `ine.__version__`.
 
 ---
 
@@ -113,6 +113,10 @@ pydantic:
 3. **Los 404 devuelven HTML, no JSON.** Un recurso inexistente responde `404`
    con una página HTML. El cliente lo detecta por estado y por *content-type*
    y lo traduce a `INENotFoundError` / `INEParseError`.
+4. **Tablas demasiado grandes.** El INE rechaza ciertas tablas (p. ej. el
+   Padrón) con un `200` de *"restricciones de volumen"*. El cliente lo traduce a
+   `INEVolumeError` y ofrece `download_table()` como vía alternativa (fichero
+   oficial CSV/PC-Axis/XLSX).
 
 Además, el esquema del INE es irregular (claves PascalCase, `FK_`/`T3_`,
 `Fecha` como *epoch* en ms, campos opcionales inconsistentes). Los modelos
@@ -160,6 +164,7 @@ from ine.errors import (
     INEHTTPError,
     INENotFoundError,
     INELogicalError,
+    INEVolumeError,
     INEParseError,
 )
 ```
@@ -179,6 +184,8 @@ Varios métodos aceptan estos parámetros de *query* del INE (todos opcionales):
 | `date`    | `["aaaammdd:aaaammdd"]`                   | Rango de fechas (el final es opcional: `aaaammdd:`).       |
 | `tv`      | `["id_variable:id_valor", ...]`           | Filtros variable:valor (repetibles).                       |
 | `filtros` | `list[(var, [valores])]` → param `g`      | Grupos OR (mismo grupo) / AND (grupos distintos).          |
+| `geo`     | `"0"` / `"1"`                             | Ámbito geográfico: `0` nacional / `1` desagregado (CCAA, provincias, municipios). |
+| `clasif`  | `int`                                     | Restringe a una clasificación concreta (en `valores.by_variable`). |
 | `page`    | `int`                                     | Página de un listado paginado (hasta 500 elem./página).    |
 | `raw`     | `bool`                                    | Si es `True`, devuelve el `dict` crudo del INE (sin modelo). |
 
@@ -256,6 +263,7 @@ client = Client(
     lang=Lang.ES,                  # idioma de los textos de la respuesta
     base_url="https://servicios.ine.es",  # host del servicio Tempus
     timeout=10.0,                  # timeout por petición, en segundos
+    follow_redirects=True,         # seguir redirecciones (el INE hace 301 al resolver códigos)
     retries=3,                     # reintentos sobre GET idempotente (red + 429 + 5xx)
     headers={"X-Custom": "..."},   # cabeceras extra
     cache=Cache(ttl=300),          # cache en memoria opt-in (None = sin cache, por defecto)
@@ -328,6 +336,8 @@ with Client() as client:
 
 - **`Format`**: `CSV_BDSC` (CSV con cabecera, separador `;`), `CSV_BD`, `PX`
   (PC-Axis), `XLSX`.
+- `download_table` vive en la **raíz del `Client`** (no bajo un namespace) porque
+  es un servicio distinto al de la API JSON.
 - `path` dado → streama al fichero y devuelve `pathlib.Path`; `path=None` →
   `bytes` (se carga entero en memoria).
 - `lang` por defecto es el del cliente; los bytes son crudos (el charset del INE
@@ -388,3 +398,6 @@ Los *gates* de CI que debe pasar cualquier cambio son:
 ```bash
 uv run ruff check . && uv run mypy ine && uv run pytest
 ```
+
+Para errores, ideas o contribuciones, abre un issue en
+[GitHub](https://github.com/juanmicl/ine-api/issues).

@@ -58,7 +58,7 @@ def test_valores_by_variable_forwards_det_clasif():
     route = respx.get(f"{JS}/VALORES_VARIABLE/74").mock(
         return_value=httpx.Response(200, json=_VALORES)
     )
-    _client().valores.by_variable(74, det="1", clasif="2")
+    _client().valores.by_variable(74, det="1", clasif=2)
     params = route.calls.last.request.url.params
     assert params["det"] == "1"
     assert params["clasif"] == "2"

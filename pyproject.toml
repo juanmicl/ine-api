@@ -1,6 +1,6 @@
 [project]
 name = "ine-api"
-version = "0.1.1"
+version = "1.0.0"
 description = "Cliente Python para la API Tempus del INE (Instituto Nacional de Estadística de España)"
 readme = "README.md"
 requires-python = ">=3.12"
