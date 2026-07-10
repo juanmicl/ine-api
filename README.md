@@ -2,15 +2,17 @@
 
 Cliente Python tipado (sync + async) para la API Tempus del INE (Instituto Nacional de Estadística de España).
 
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![Licencia](https://img.shields.io/badge/license-MIT-green)
-![tipado](https://img.shields.io/badge/type--checked-py.typed-purple)
+[![PyPI](https://img.shields.io/pypi/v/ine-api)](https://pypi.org/project/ine-api/)
+[![Python](https://img.shields.io/pypi/pyversions/ine-api)](https://pypi.org/project/ine-api/)
+[![License](https://img.shields.io/github/license/juanmicl/ine-api)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/juanmicl/ine-api/ci.yml?branch=main)](https://github.com/juanmicl/ine-api/actions/workflows/ci.yml)
+![typed](https://img.shields.io/badge/type--checked-py.typed-purple)
 
 ---
 
 ## Estado
 
-**v1.0 — API pública estable (SemVer).** Cliente Python tipado (sync + async) para
+**v1.0 — API pública estable.** Cliente Python tipado (sync + async) para
 la API Tempus del INE, con **cobertura completa** del catálogo (32 endpoints; ver
 [Cobertura](#cobertura-de-endpoints)). Publicado en
 [PyPI](https://pypi.org/project/ine-api/); versión instalada: `ine.__version__`.
@@ -244,7 +246,8 @@ client.datos.metadata_operacion(
 |               | `client.tablas.valores_grupo(id, id_grupo)` | `VALORES_GRUPOSTABLA/{id}/{id_grupo}` |
 
 > Incluye **8 endpoints no documentados** en el OpenAPI oficial (7 en `client.maestros`
-> + `client.variables.variable`), descubiertos empíricamente y verificados en vivo.
+>
+> - `client.variables.variable`), descubiertos empíricamente y verificados en vivo.
 
 **Cobertura completa** de la API Tempus del INE: los 32 endpoints del catálogo
 (24 del spec oficial + 8 no documentados).
