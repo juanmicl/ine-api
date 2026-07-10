@@ -13,8 +13,12 @@ license = {text = "MIT"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
+
+[project.optional-dependencies]
+dataframe = ["pandas>=2.0"]
 
 [project.urls]
 Homepage = "https://github.com/juanmicl/ine-api"
@@ -30,6 +34,7 @@ build-backend = "hatchling.build"
 dev = [
     "anyio>=4.11.0",
     "mypy>=2.2.0",
+    "pandas>=2.0",
     "pytest>=9.1.1",
     "respx>=0.23.1",
     "ruff>=0.15.20",

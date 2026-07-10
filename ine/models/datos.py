@@ -9,6 +9,7 @@ cada :class:`~ine.models.datos.DatosObservacion` es un dato puntual
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from ine.models._base import ConFecha, _BaseModel
 
@@ -39,3 +40,25 @@ class DatosSerie(_BaseModel):
     cod: str
     nombre: str
     data: list[DatosObservacion] = []
+
+    def to_dataframe(self) -> Any:
+        """Observaciones como DataFrame de pandas (una fila por observación).
+
+        Columnas: ``fecha``, ``valor``, ``anyo``, ``fk_periodo``, ``secreto``.
+        Requiere el extra ``dataframe``: ``pip install ine-api[dataframe]``.
+
+        Returns:
+            Un :class:`pandas.DataFrame` con las observaciones de la serie.
+
+        Raises:
+            ImportError: Si pandas no está instalado (mensaje con pista de
+                instalación).
+        """
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise ImportError(
+                "DatosSerie.to_dataframe() requiere pandas. Instálalo con: "
+                "pip install ine-api[dataframe]"
+            ) from exc
+        return pd.DataFrame([obs.model_dump() for obs in self.data])
