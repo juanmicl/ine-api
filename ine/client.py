@@ -15,8 +15,10 @@ from ine.services import (
     DatosService,
     MaestrosService,
     OperacionesService,
+    PublicacionesService,
     SeriesService,
     TablasService,
+    VariablesService,
 )
 
 
@@ -98,6 +100,8 @@ class Client:
         self.datos = DatosService(self._backend, self._config)
         self.tablas = TablasService(self._backend, self._config)
         self.maestros = MaestrosService(self._backend, self._config)
+        self.publicaciones = PublicacionesService(self._backend, self._config)
+        self.variables = VariablesService(self._backend, self._config)
 
     # --- context manager ---
     def __enter__(self) -> Client:

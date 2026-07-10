@@ -15,8 +15,10 @@ from ine.services import (
     AsyncDatosService,
     AsyncMaestrosService,
     AsyncOperacionesService,
+    AsyncPublicacionesService,
     AsyncSeriesService,
     AsyncTablasService,
+    AsyncVariablesService,
 )
 
 
@@ -94,6 +96,8 @@ class AsyncClient:
         self.datos = AsyncDatosService(self._backend, self._config)
         self.tablas = AsyncTablasService(self._backend, self._config)
         self.maestros = AsyncMaestrosService(self._backend, self._config)
+        self.publicaciones = AsyncPublicacionesService(self._backend, self._config)
+        self.variables = AsyncVariablesService(self._backend, self._config)
 
     # --- context manager ---
     async def __aenter__(self) -> AsyncClient:

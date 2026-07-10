@@ -90,5 +90,35 @@ def clasificaciones_operacion_path(lang: str, op: str) -> str:
     return f"/wstempus/js/{lang}/CLASIFICACIONES_OPERACION/{op}"
 
 
+# --- PUBLICACIONES ---
+
+
+def publicaciones_path(lang: str) -> str:
+    return f"/wstempus/js/{lang}/PUBLICACIONES"
+
+
+def publicaciones_operacion_path(lang: str, op: str) -> str:
+    return f"/wstempus/js/{lang}/PUBLICACIONES_OPERACION/{op}"
+
+
+def publicacion_fecha_path(lang: str, id_publicacion: int) -> str:
+    return f"/wstempus/js/{lang}/PUBLICACIONFECHA_PUBLICACION/{id_publicacion}"
+
+
+# --- VARIABLES ---
+
+
+def variables_path(lang: str) -> str:
+    return f"/wstempus/js/{lang}/VARIABLES"
+
+
+def variables_operacion_path(lang: str, op: str) -> str:
+    return f"/wstempus/js/{lang}/VARIABLES_OPERACION/{op}"
+
+
+def variable_path(lang: str, variable_id: int) -> str:
+    return f"/wstempus/js/{lang}/VARIABLE/{variable_id}"
+
+
 def build_params(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}

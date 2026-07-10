@@ -14,18 +14,24 @@ tablas) y se instancian como atributos del cliente:
 from ine.services.datos import AsyncDatosService, DatosService
 from ine.services.maestros import AsyncMaestrosService, MaestrosService
 from ine.services.operaciones import AsyncOperacionesService, OperacionesService
+from ine.services.publicaciones import AsyncPublicacionesService, PublicacionesService
 from ine.services.series import AsyncSeriesService, SeriesService
 from ine.services.tablas import AsyncTablasService, TablasService
+from ine.services.variables import AsyncVariablesService, VariablesService
 
 __all__ = [
     "AsyncDatosService",
     "AsyncMaestrosService",
     "AsyncOperacionesService",
+    "AsyncPublicacionesService",
     "AsyncSeriesService",
     "AsyncTablasService",
+    "AsyncVariablesService",
     "DatosService",
     "MaestrosService",
     "OperacionesService",
+    "PublicacionesService",
     "SeriesService",
     "TablasService",
+    "VariablesService",
 ]
