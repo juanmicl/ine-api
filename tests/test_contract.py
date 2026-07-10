@@ -40,8 +40,9 @@ def test_contract_tablas(mock_ine):
             ],
         )
     )
-    tablas = Client().tablas.by_operacion("IPC")
-    assert tablas[0].id == 24077
+    tablas = Client().tablas.by_operacion("IPC", raw=True)
+    assert tablas[0]["Id"] == 24077
+    assert tablas[0]["Nombre"] == "Índice general nacional"
 
 
 def test_contract_datos_tabla(mock_ine):
