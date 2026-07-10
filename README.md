@@ -339,6 +339,29 @@ with Client() as client:
 
 ---
 
+## Pandas (opcional)
+
+Para análisis, exporta las observaciones de una serie a un `DataFrame` de pandas.
+Es una **dependencia opcional** — el core no depende de pandas:
+
+```bash
+pip install ine-api[dataframe]
+```
+
+```python
+from ine import Client
+
+with Client() as c:
+    series = c.datos.serie("53262")   # -> list[DatosSerie]
+    df = series[0].to_dataframe()      # -> pd.DataFrame (requiere el extra `dataframe`)
+    # columnas: fecha, valor, anyo, fk_periodo, secreto
+```
+
+Si pandas no está instalado, `to_dataframe()` lanza un `ImportError` con la pista
+de instalación.
+
+---
+
 ## Licencia
 
 - El **código** de este cliente está bajo la licencia **MIT** (ver
