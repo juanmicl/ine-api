@@ -13,6 +13,7 @@ from ine._config import Lang as Lang
 from ine._files import Format, build_file_url
 from ine.services import (
     DatosService,
+    MaestrosService,
     OperacionesService,
     SeriesService,
     TablasService,
@@ -96,6 +97,7 @@ class Client:
         self.series = SeriesService(self._backend, self._config)
         self.datos = DatosService(self._backend, self._config)
         self.tablas = TablasService(self._backend, self._config)
+        self.maestros = MaestrosService(self._backend, self._config)
 
     # --- context manager ---
     def __enter__(self) -> Client:

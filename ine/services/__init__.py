@@ -12,16 +12,19 @@ tablas) y se instancian como atributos del cliente:
 """
 
 from ine.services.datos import AsyncDatosService, DatosService
+from ine.services.maestros import AsyncMaestrosService, MaestrosService
 from ine.services.operaciones import AsyncOperacionesService, OperacionesService
 from ine.services.series import AsyncSeriesService, SeriesService
 from ine.services.tablas import AsyncTablasService, TablasService
 
 __all__ = [
     "AsyncDatosService",
+    "AsyncMaestrosService",
     "AsyncOperacionesService",
     "AsyncSeriesService",
     "AsyncTablasService",
     "DatosService",
+    "MaestrosService",
     "OperacionesService",
     "SeriesService",
     "TablasService",

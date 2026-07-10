@@ -13,6 +13,7 @@ from ine._config import Lang as Lang
 from ine._files import Format, build_file_url
 from ine.services import (
     AsyncDatosService,
+    AsyncMaestrosService,
     AsyncOperacionesService,
     AsyncSeriesService,
     AsyncTablasService,
@@ -92,6 +93,7 @@ class AsyncClient:
         self.series = AsyncSeriesService(self._backend, self._config)
         self.datos = AsyncDatosService(self._backend, self._config)
         self.tablas = AsyncTablasService(self._backend, self._config)
+        self.maestros = AsyncMaestrosService(self._backend, self._config)
 
     # --- context manager ---
     async def __aenter__(self) -> AsyncClient:
